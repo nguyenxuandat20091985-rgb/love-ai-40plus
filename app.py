@@ -142,15 +142,35 @@ st.markdown("""
         }
     }
     
-    /* Badge for remaining tries */
+    /* Badge for remaining tries - ĐÃ SỬA */
     .badge {
         display: inline-block;
-        padding: 0.25rem 0.75rem;
+        padding: 0.5rem 1.5rem;
         background: linear-gradient(45deg, #FF69B4, #FF1493);
         color: white;
-        border-radius: 20px;
+        border-radius: 25px;
         font-weight: bold;
-        font-size: 0.9rem;
+        font-size: 1.2rem;
+        margin: 0.5rem 0;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(255, 105, 180, 0.3);
+    }
+    
+    /* Progress bar style */
+    .progress-container {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 1rem;
+        margin: 1rem 0;
+    }
+    
+    /* Scenario box */
+    .scenario-box {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin: 1rem 0;
+        border-left: 4px solid #6A5ACD;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -299,11 +319,56 @@ class AIContentDatabase:
     def generate_extended_scenarios(self):
         """Tạo thêm nhiều tình huống đa dạng"""
         base_scenarios = [
-            # Thêm 20+ categories với nhiều tình huống
-            ("Khi giận nhau", ["Mình biết cả hai đều đang khó chịu. Hãy cho nhau chút thời gian bình tĩnh, rồi chúng ta nói chuyện sau nhé.", "Mình không muốn tranh cãi tiếp. Hãy tạm dừng và khi nào bình tĩnh hơn, chúng ta có thể trao đổi một cách xây dựng.", "Giận nhau cũng mệt lắm. Mình đề nghị mỗi người viết ra điều mình cảm thấy, rồi cùng nhau tìm giải pháp."]),
-            ("Khi đối phương stress", ["Có vẻ bạn đang rất mệt mỏi. Mình ở đây nếu bạn cần chia sẻ. Đôi khi nói ra sẽ nhẹ lòng hơn.", "Nhìn bạn căng thẳng mình cũng lo. Hãy nhớ chăm sóc bản thân, đừng quá áp lực. Mọi chuyện rồi sẽ ổn thôi.", "Muốn giúp bạn giảm stress. Bạn có muốn đi đâu đó thư giãn cuối tuần này không? Hoặc chỉ cần ngồi im lặng bên nhau cũng được."]),
-            ("Hẹn gặp lần đầu", ["Rất mong được gặp bạn. Mình sẽ đến đúng giờ. Nếu có thay đổi gì, hãy cho mình biết trước nhé.", "Lần đầu gặp nhau, mình hơi hồi hộp nhưng cũng rất háo hức. Hy vọng chúng ta có một buổi gặp mặt thoải mái.", "Mình đã đặt chỗ ở [địa điểm] lúc [giờ]. Rất mong được gặp bạn và có một buổi trò chuyện thú vị."]),
-            ("Khi muốn gần gũi nhưng tế nhị", ["Mình cảm thấy rất thoải mái khi ở bên bạn. Hy vọng bạn cũng có cảm giác tích cực như vậy.", "Thời gian bên bạn làm mình hạnh phúc. Mình không muốn vội vàng, chỉ muốn nói rằng mình trân trọng khoảnh khắc này.", "Đôi khi mình ước chúng ta có nhiều thời gian bên nhau hơn. Nhưng mình hiểu mọi thứ cần có thời gian riêng của nó."]),
+            ("Khi giận nhau", [
+                "Mình biết cả hai đều đang khó chịu. Hãy cho nhau chút thời gian bình tĩnh, rồi chúng ta nói chuyện sau nhé.",
+                "Mình không muốn tranh cãi tiếp. Hãy tạm dừng và khi nào bình tĩnh hơn, chúng ta có thể trao đổi một cách xây dựng.",
+                "Giận nhau cũng mệt lắm. Mình đề nghị mỗi người viết ra điều mình cảm thấy, rồi cùng nhau tìm giải pháp."
+            ]),
+            ("Khi đối phương stress", [
+                "Có vẻ bạn đang rất mệt mỏi. Mình ở đây nếu bạn cần chia sẻ. Đôi khi nói ra sẽ nhẹ lòng hơn.",
+                "Nhìn bạn căng thẳng mình cũng lo. Hãy nhớ chăm sóc bản thân, đừng quá áp lực. Mọi chuyện rồi sẽ ổn thôi.",
+                "Muốn giúp bạn giảm stress. Bạn có muốn đi đâu đó thư giãn cuối tuần này không? Hoặc chỉ cần ngồi im lặng bên nhau cũng được."
+            ]),
+            ("Hẹn gặp lần đầu", [
+                "Rất mong được gặp bạn. Mình sẽ đến đúng giờ. Nếu có thay đổi gì, hãy cho mình biết trước nhé.",
+                "Lần đầu gặp nhau, mình hơi hồi hộp nhưng cũng rất háo hức. Hy vọng chúng ta có một buổi gặp mặt thoải mái.",
+                "Mình đã đặt chỗ ở [địa điểm] lúc [giờ]. Rất mong được gặp bạn và có một buổi trò chuyện thú vị."
+            ]),
+            ("Khi muốn gần gũi nhưng tế nhị", [
+                "Mình cảm thấy rất thoải mái khi ở bên bạn. Hy vọng bạn cũng có cảm giác tích cực như vậy.",
+                "Thời gian bên bạn làm mình hạnh phúc. Mình không muốn vội vàng, chỉ muốn nói rằng mình trân trọng khoảnh khắc này.",
+                "Đôi khi mình ước chúng ta có nhiều thời gian bên nhau hơn. Nhưng mình hiểu mọi thứ cần có thời gian riêng của nó."
+            ]),
+            ("Khi người kia ít trả lời", [
+                "Mình thấy dạo này chúng ta ít nói chuyện hơn. Có điều gì bạn muốn chia sẻ không? Mình luôn sẵn sàng lắng nghe.",
+                "Nếu bạn đang bận hoặc cần không gian, mình hoàn toàn hiểu. Chỉ muốn bạn biết rằng mình vẫn quan tâm đến bạn.",
+                "Không cần phải trả lời ngay đâu, khi nào bạn rảnh và muốn trò chuyện thì mình vẫn ở đây."
+            ]),
+            ("Khi muốn tỏ tình", [
+                "Mình không giỏi nói những lời hoa mỹ, nhưng thật lòng mình rất thích được ở bên bạn.",
+                "Thời gian bên bạn làm mình hạnh phúc. Mình muốn hỏi liệu chúng ta có thể thử tiến xa hơn không?",
+                "Mình trân trọng mối quan hệ của chúng ta. Nếu bạn cũng có cảm tình, mình muốn cùng bạn xây dựng điều gì đó đặc biệt."
+            ]),
+            ("Sau khi cãi nhau", [
+                "Mình đã suy nghĩ rất nhiều về chuyện hôm qua. Mình xin lỗi vì phần lỗi của mình và muốn nói chuyện để hiểu nhau hơn.",
+                "Cãi nhau không giải quyết được vấn đề. Mình muốn nghe cảm nhận của bạn và cùng tìm cách tốt hơn.",
+                "Dù có bất đồng, mình vẫn trân trọng bạn. Hãy cho nhau cơ hội sửa chữa và học hỏi từ lỗi lầm."
+            ]),
+            ("Khi đối phương buồn", [
+                "Mình thấy bạn có vẻ không vui. Nếu muốn chia sẻ, mình sẽ lắng nghe mà không phán xét.",
+                "Đôi khi im lặng bên nhau cũng là cách an ủi. Mình ở đây với bạn, dù bạn có nói hay không nói.",
+                "Buồn là cảm xúc bình thường. Đừng ép mình phải vui vẻ. Hãy cứ buồn, mình sẽ đồng hành cùng bạn."
+            ]),
+            ("Kỷ niệm ngày đặc biệt", [
+                "Chúc mừng ngày chúng ta quen nhau! Cảm ơn vì đã cùng mình trải qua những khoảnh khắc đáng nhớ.",
+                "Nhìn lại chặng đường đã qua, mình biết ơn vì có bạn đồng hành. Hy vọng chúng ta sẽ có nhiều kỷ niệm đẹp hơn nữa.",
+                "Mỗi ngày bên bạn đều là một món quà. Cảm ơn bạn đã là chính mình và cho mình cơ hội được biết bạn."
+            ]),
+            ("Khi xa cách", [
+                "Dù xa nhau về khoảng cách, nhưng trái tim mình vẫn gần bạn. Nhớ bạn nhiều lắm.",
+                "Mong ngày chúng ta gặp lại không còn xa. Từng ngày qua đều đếm ngược đến lúc được thấy bạn.",
+                "Xa cách thử thách tình cảm, nhưng mình tin vào điều chúng ta có. Hãy giữ liên lạc và chia sẻ với nhau nhé."
+            ])
         ]
         
         for i, (title, suggestions) in enumerate(base_scenarios, len(self.scenarios)+1):
@@ -356,7 +421,8 @@ class UserManager:
                 "remaining_tries": 5,
                 "is_premium": False,
                 "registered_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "usage_count": 0
+                "usage_count": 0,
+                "last_used": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             }
             self.save_data()
             return True
@@ -368,6 +434,7 @@ class UserManager:
             if self.users[phone_number]["remaining_tries"] > 0:
                 self.users[phone_number]["remaining_tries"] -= 1
                 self.users[phone_number]["usage_count"] += 1
+                self.users[phone_number]["last_used"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 self.save_data()
                 return True
         return False
@@ -389,216 +456,14 @@ class UserManager:
         if phone_number in self.users:
             self.users[phone_number]["is_premium"] = True
             self.users[phone_number]["remaining_tries"] = 999  # Unlimited
+            self.users[phone_number]["last_used"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             self.save_data()
             return True
         return False
 
 # ============================================
-# STREAMLIT APP
+# HELPER FUNCTIONS
 # ============================================
-
-def main():
-    # Initialize managers
-    ai_db = AIContentDatabase()
-    user_manager = UserManager()
-    
-    # Hero Section
-    st.markdown("""
-    <div class="hero">
-        <h1>💬 EMOTICONN AI</h1>
-        <p>Trợ lý giao tiếp cảm xúc thông minh - Giúp bạn diễn đạt cảm xúc một cách tinh tế, xây dựng những mối quan hệ ý nghĩa trong hành trình trưởng thành.</p>
-        <p><i>Dành cho những người cô đơn muốn kết nối, những trái tim ngại ngùng muốn tỏ bày</i></p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Session state
-    if 'phone_number' not in st.session_state:
-        st.session_state.phone_number = ""
-    if 'selected_category' not in st.session_state:
-        st.session_state.selected_category = "A1"
-    if 'selected_scenario' not in st.session_state:
-        st.session_state.selected_scenario = 0
-    
-    # Layout columns
-    col1, col2 = st.columns([1, 2])
-    
-    with col1:
-        # Free Trial Section
-        st.markdown("### 🆓 Dùng thử miễn phí")
-        
-        phone_input = st.text_input(
-            "Nhập số điện thoại của bạn:",
-            value=st.session_state.phone_number,
-            placeholder="0912345678",
-            key="phone_input"
-        )
-        
-        if phone_input:
-            st.session_state.phone_number = phone_input
-            
-            # Register if new phone
-            if not any(char.isdigit() for char in phone_input) or len(phone_input) < 9:
-                st.warning("Vui lòng nhập số điện thoại hợp lệ")
-            else:
-                user_manager.register_phone(phone_input)
-                remaining = user_manager.get_remaining_tries(phone_input)
-                is_premium = user_manager.is_premium(phone_input)
-                
-                if is_premium:
-                    st.success("🎉 TÀI KHOẢN PREMIUM - Sử dụng không giới hạn!")
-                else:
-                    st.info(f"Bạn còn <span class='badge'>{remaining}/5</span> lượt dùng thử", unsafe_allow_html=True)
-        
-        # Categories Section
-        st.markdown("### 📚 Chọn tình huống")
-        
-        categories = ai_db.get_categories()
-        category_list = list(categories.keys())
-        
-        # Create tabs for categories
-        tab_titles = [
-            "Làm quen", "Tìm hiểu", "Có tình cảm", 
-            "Trưởng thành", "Theo giới tính", "Khác"
-        ]
-        
-        tabs = st.tabs(tab_titles)
-        
-        # Map categories to tabs
-        category_groups = {
-            0: ["A1", "A2", "A3"],  # Làm quen
-            1: ["B1"],  # Tìm hiểu
-            2: ["C1"],  # Có tình cảm
-            3: ["D1"],  # Trưởng thành
-            4: ["E1", "E2"],  # Theo giới tính
-            5: [key for key in category_list if key not in ["A1", "A2", "A3", "B1", "C1", "D1", "E1", "E2"]]  # Khác
-        }
-        
-        for tab_idx, tab in enumerate(tabs):
-            with tab:
-                if tab_idx in category_groups:
-                    for cat_id in category_groups[tab_idx]:
-                        if cat_id in categories:
-                            if st.button(f"📌 {categories[cat_id]['title']}", key=f"cat_{cat_id}"):
-                                st.session_state.selected_category = cat_id
-                                st.session_state.selected_scenario = 0
-                                st.rerun()
-    
-    with col2:
-        # Main content area
-        if st.session_state.phone_number and st.session_state.phone_number != "":
-            remaining = user_manager.get_remaining_tries(st.session_state.phone_number)
-            is_premium = user_manager.is_premium(st.session_state.phone_number)
-            
-            if not is_premium and remaining <= 0:
-                # Show payment section
-                show_payment_section(user_manager)
-            else:
-                # Show AI suggestions
-                show_ai_suggestions(ai_db, user_manager)
-        else:
-            st.info("👆 Vui lòng nhập số điện thoại để bắt đầu trải nghiệm")
-            
-            # Show sample suggestions
-            st.markdown("### 💡 Mẫu gợi ý từ EMOTICONN AI")
-            
-            sample_categories = list(categories.keys())[:3]
-            for cat_id in sample_categories:
-                category = categories[cat_id]
-                with st.expander(f"📁 {category['title']}"):
-                    for i, scenario in enumerate(category['scenarios'][:1]):  # Show first scenario only
-                        st.write(f"**Tình huống:** {scenario['context']}")
-                        st.write("**Gợi ý:**")
-                        for suggestion in scenario['suggestions'][:1]:  # Show first suggestion only
-                            st.success(f"💭 {suggestion}")
-    
-    # Footer
-    st.markdown("""
-    <div class="footer">
-        <p>© 2024 EMOTICONN AI - Sản phẩm dành cho cộng đồng trưởng thành Việt</p>
-        <p>📧 Liên hệ: emoticonn.support@gmail.com | 🔒 Bảo mật & riêng tư là ưu tiên hàng đầu</p>
-        <p><small>AI không thay thế trị liệu tâm lý chuyên nghiệp. Trong khủng hoảng, hãy tìm chuyên gia.</small></p>
-    </div>
-    """, unsafe_allow_html=True)
-
-def show_ai_suggestions(ai_db, user_manager):
-    """Hiển thị gợi ý AI"""
-    phone = st.session_state.phone_number
-    category_id = st.session_state.selected_category
-    
-    categories = ai_db.get_categories()
-    
-    if category_id in categories:
-        category = categories[category_id]
-        
-        st.markdown(f"### {category['title']}")
-        
-        # Scenario selector
-        if len(category['scenarios']) > 1:
-            scenario_titles = [f"Tình huống {i+1}: {s['context'][:50]}..." 
-                              for i, s in enumerate(category['scenarios'])]
-            selected_idx = st.selectbox(
-                "Chọn tình huống cụ thể:",
-                range(len(category['scenarios'])),
-                format_func=lambda x: scenario_titles[x]
-            )
-        else:
-            selected_idx = 0
-        
-        scenario = category['scenarios'][selected_idx]
-        
-        st.markdown(f"**🎯 Tình huống:** {scenario['context']}")
-        
-        # Check if user can use
-        is_premium = user_manager.is_premium(phone)
-        remaining = user_manager.get_remaining_tries(phone)
-        
-        if not is_premium and remaining <= 0:
-            st.warning("Bạn đã hết lượt dùng thử. Vui lòng nâng cấp để tiếp tục.")
-            return
-        
-        # Generate button
-        if st.button("✨ Tạo gợi ý AI", type="primary"):
-            if not is_premium:
-                # Use one try
-                if user_manager.use_try(phone):
-                    st.success(f"Đã sử dụng 1 lượt. Còn lại: {user_manager.get_remaining_tries(phone)} lượt")
-                else:
-                    st.error("Không thể sử dụng lượt này")
-                    return
-            
-            # Show AI suggestions
-            st.markdown("### 💬 Gợi ý tin nhắn của bạn:")
-            
-            for i, suggestion in enumerate(scenario['suggestions']):
-                with st.container():
-                    st.markdown(f"**Lựa chọn {i+1}:**")
-                    st.info(suggestion)
-                    
-                    # Copy button for each suggestion
-                    if st.button(f"📋 Sao chép lựa chọn {i+1}", key=f"copy_{i}"):
-                        st.write("Đã sao chép vào clipboard! (Trên máy thật sẽ hoạt động)")
-        
-        # Custom request
-        with st.expander("🎨 Tùy chỉnh yêu cầu của bạn"):
-            custom_request = st.text_area(
-                "Mô tả tình huống cụ thể của bạn:",
-                placeholder="Ví dụ: Muốn xin lỗi sau khi tranh cãi về việc đến muộn...",
-                height=100
-            )
-            
-            if st.button("🤖 AI Phân tích & Gợi ý"):
-                if custom_request:
-                    # Simulate AI analysis
-                    st.success("AI đang phân tích tình huống của bạn...")
-                    
-                    # Generate custom suggestions based on request
-                    custom_suggestions = generate_custom_suggestions(custom_request)
-                    
-                    st.markdown("### 💡 Gợi ý cá nhân hóa:")
-                    for i, suggestion in enumerate(custom_suggestions[:3]):
-                        st.success(f"**Gợi ý {i+1}:** {suggestion}")
-                else:
-                    st.warning("Vui lòng nhập mô tả tình huống")
 
 def show_payment_section(user_manager):
     """Hiển thị phần thanh toán"""
@@ -625,7 +490,10 @@ def show_payment_section(user_manager):
         ```
         """)
         
-        st.info(f"**Ví dụ:** `EMOTICONN {st.session_state.phone_number}`")
+        phone = st.session_state.phone_number
+        st.code(f"EMOTICONN {phone}", language="text")
+        
+        st.info("**Ví dụ:** `EMOTICONN {SỐ ĐIỆN THOẠI CỦA BẠN}`")
     
     with col2:
         st.markdown("""
@@ -637,74 +505,396 @@ def show_payment_section(user_manager):
         5. Xác nhận chuyển tiền
         6. Quay lại đây bấm nút xác nhận
         """)
+        
+        st.markdown("""
+        ### ✅ Lợi ích Premium:
+        - 🔓 Truy cập không giới hạn
+        - 📚 70,000+ tình huống
+        - 🎨 Gợi ý cá nhân hóa
+        - 💾 Lưu trữ tin nhắn yêu thích
+        - 🆕 Cập nhật miễn phí mãi mãi
+        """)
     
     st.markdown("---")
     
     # Payment confirmation
     st.markdown("### ✅ Xác nhận thanh toán")
     
-    if st.button("💰 TÔI ĐÃ CHUYỂN KHOẢN", type="secondary", use_container_width=True):
-        # In real app, you would verify payment here
-        # For demo, we'll auto-upgrade
-        if user_manager.upgrade_to_premium(st.session_state.phone_number):
-            st.balloons()
-            st.success("🎉 NÂNG CẤP THÀNH CÔNG! Tài khoản của bạn đã được mở khóa vĩnh viễn!")
-            st.rerun()
+    col_confirm1, col_confirm2 = st.columns([2, 1])
+    
+    with col_confirm1:
+        confirm_text = st.text_input(
+            "Nhập 'XÁC NHẬN' để xác nhận bạn đã chuyển khoản:",
+            placeholder="XÁC NHẬN"
+        )
+    
+    with col_confirm2:
+        if st.button("💰 TÔI ĐÃ CHUYỂN KHOẢN", type="secondary", use_container_width=True):
+            if confirm_text == "XÁC NHẬN":
+                # In real app, you would verify payment here
+                # For demo, we'll auto-upgrade
+                if user_manager.upgrade_to_premium(st.session_state.phone_number):
+                    st.balloons()
+                    st.success("🎉 NÂNG CẤP THÀNH CÔNG! Tài khoản của bạn đã được mở khóa vĩnh viễn!")
+                    st.rerun()
+                else:
+                    st.error("Có lỗi xảy ra. Vui lòng liên hệ hỗ trợ.")
+            else:
+                st.warning("Vui lòng nhập 'XÁC NHẬN' để xác nhận")
+
+def show_ai_suggestions(ai_db, user_manager):
+    """Hiển thị gợi ý AI"""
+    phone = st.session_state.phone_number
+    category_id = st.session_state.selected_category
+    
+    categories = ai_db.get_categories()
+    
+    if category_id in categories:
+        category = categories[category_id]
+        
+        st.markdown(f"### 📖 {category['title']}")
+        
+        # Scenario selector
+        if len(category['scenarios']) > 1:
+            scenario_titles = [f"Tình huống {i+1}: {s['context'][:50]}..." 
+                              for i, s in enumerate(category['scenarios'])]
+            selected_idx = st.selectbox(
+                "Chọn tình huống cụ thể:",
+                range(len(category['scenarios'])),
+                format_func=lambda x: scenario_titles[x],
+                key="scenario_selector"
+            )
         else:
-            st.error("Có lỗi xảy ra. Vui lòng liên hệ hỗ trợ.")
+            selected_idx = 0
+        
+        scenario = category['scenarios'][selected_idx]
+        
+        st.markdown(f"**🎯 Tình huống:** {scenario['context']}")
+        
+        # Check if user can use
+        is_premium = user_manager.is_premium(phone)
+        remaining = user_manager.get_remaining_tries(phone)
+        
+        if not is_premium:
+            st.markdown(f"""
+            <div class="progress-container">
+                <strong>Lượt dùng thử còn lại:</strong><br>
+                <div class="badge">{remaining}/5 lượt</div>
+                <small>Nâng cấp Premium để dùng không giới hạn</small>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        if not is_premium and remaining <= 0:
+            st.error("❌ Bạn đã hết lượt dùng thử. Vui lòng nâng cấp để tiếp tục.")
+            return
+        
+        # Generate button
+        if st.button("✨ Tạo gợi ý AI", type="primary", use_container_width=True):
+            if not is_premium:
+                # Use one try
+                if user_manager.use_try(phone):
+                    new_remaining = user_manager.get_remaining_tries(phone)
+                    st.success(f"✅ Đã sử dụng 1 lượt. Còn lại: {new_remaining} lượt")
+                else:
+                    st.error("Không thể sử dụng lượt này")
+                    return
+            
+            # Show AI suggestions
+            st.markdown("### 💬 Gợi ý tin nhắn của bạn:")
+            
+            for i, suggestion in enumerate(scenario['suggestions']):
+                with st.container():
+                    st.markdown(f"**Lựa chọn {i+1}:**")
+                    
+                    # Create a nice box for each suggestion
+                    st.markdown(f"""
+                    <div class="scenario-box">
+                    {suggestion}
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    # Copy button for each suggestion
+                    col_copy1, col_copy2 = st.columns([3, 1])
+                    with col_copy1:
+                        st.code(suggestion, language="text")
+                    with col_copy2:
+                        if st.button(f"📋 Sao chép", key=f"copy_{i}"):
+                            # In real app, use pyperclip or streamlit's clipboard
+                            st.success("Đã sao chép! (Trên máy thật sẽ hoạt động)")
+            
+            if not is_premium:
+                remaining_after = user_manager.get_remaining_tries(phone)
+                st.info(f"Bạn còn {remaining_after} lượt dùng thử. Nâng cấp Premium để dùng không giới hạn!")
+        
+        # Custom request
+        with st.expander("🎨 Tùy chỉnh yêu cầu của bạn"):
+            custom_request = st.text_area(
+                "Mô tả tình huống cụ thể của bạn:",
+                placeholder="Ví dụ: Muốn xin lỗi sau khi tranh cãi về việc đến muộn, nhưng không biết bắt đầu thế nào...",
+                height=100,
+                key="custom_request"
+            )
+            
+            if st.button("🤖 AI Phân tích & Gợi ý", key="custom_analyze"):
+                if custom_request:
+                    # Check tries for custom request too
+                    if not is_premium:
+                        if remaining <= 0:
+                            st.error("Bạn đã hết lượt dùng thử")
+                            return
+                        else:
+                            user_manager.use_try(phone)
+                    
+                    # Simulate AI analysis
+                    with st.spinner("AI đang phân tích tình huống của bạn..."):
+                        # Generate custom suggestions based on request
+                        custom_suggestions = generate_custom_suggestions(custom_request)
+                        
+                        st.markdown("### 💡 Gợi ý cá nhân hóa:")
+                        for i, suggestion in enumerate(custom_suggestions[:3]):
+                            st.success(f"**Gợi ý {i+1}:** {suggestion}")
+                            
+                            # Add copy button for each
+                            if st.button(f"Sao chép gợi ý {i+1}", key=f"custom_copy_{i}"):
+                                st.success("Đã sao chép!")
+                else:
+                    st.warning("Vui lòng nhập mô tả tình huống")
 
 def generate_custom_suggestions(request):
     """Tạo gợi ý tùy chỉnh dựa trên yêu cầu"""
     # This is a simplified version. In production, you would use an AI model
     
-    templates = [
-        "Mình hiểu cảm giác của bạn lúc này. Có lẽ bạn nên nói: \"{request}\" một cách chân thành và nhẹ nhàng.",
-        "Trong tình huống này, sự chân thành là quan trọng nhất. Thử diễn đạt: \"Tôi cảm thấy...\" thay vì \"Bạn làm tôi...\"",
-        "Hãy bắt đầu bằng việc thừa nhận cảm xúc của đối phương: \"Mình biết bạn đang cảm thấy...\" sau đó chia sẻ quan điểm của bạn.",
-        "Đôi khi im lặng cũng là một thông điệp. Nếu khó nói, hãy đề nghị: \"Chúng ta có thể nói chuyện sau khi cả hai bình tĩnh hơn không?\"",
-        "Thể hiện sự đồng cảm: \"Mình có thể hình dung bạn đang thấy thế nào...\" rồi mới đưa ra quan điểm cá nhân.",
-    ]
-    
     # Simple keyword-based suggestion
-    keywords = {
-        "xin lỗi": [
-            "Mình nhận ra lỗi của mình và thực sự xin lỗi vì đã làm bạn buồn.",
-            "Xin lỗi vì những điều chưa phải. Mình sẽ cố gắng thay đổi.",
-            "Lời xin lỗi có thể không sửa chữa được lỗi lầm, nhưng mình mong bạn biết mình thực sự hối hận."
-        ],
-        "cảm ơn": [
-            "Cảm ơn bạn vì đã luôn ở bên. Sự hiện diện của bạn rất ý nghĩa với mình.",
-            "Mình muốn bày tỏ lòng biết ơn vì tất cả những gì bạn đã làm.",
-            "Cảm ơn không chỉ vì việc bạn làm, mà còn vì con người bạn đang là."
-        ],
-        "yêu": [
-            "Mình không giỏi diễn đạt, nhưng trái tim mình biết nó thuộc về bạn.",
-            "Yêu là khi những điều nhỏ nhặt bên bạn trở nên đặc biệt.",
-            "Mình không cần lời hứa xa vời, chỉ cần được bên bạn mỗi ngày."
-        ],
-        "buồn": [
-            "Hôm nay mình cảm thấy hơi nặng lòng. Cảm ơn vì đã lắng nghe.",
-            "Đôi khi buồn mà không biết vì sao. Chỉ cần bạn biết mình đang có một ngày khó khăn.",
-            "Buồn sẽ qua, nhưng tình bạn/ tình yêu của chúng ta sẽ còn mãi."
-        ]
-    }
-    
     suggestions = []
     
-    # Check for keywords
-    for keyword, keyword_suggestions in keywords.items():
-        if keyword in request.lower():
-            suggestions.extend(keyword_suggestions)
+    # Check for keywords and generate appropriate suggestions
+    request_lower = request.lower()
     
-    # Add template-based suggestions
-    for template in templates[:2]:
-        suggestions.append(template.format(request=request[:50] + "..."))
+    if any(word in request_lower for word in ["xin lỗi", "lỗi", "sorry", "xin lỗi"]):
+        suggestions.extend([
+            "Mình nhận ra lỗi của mình và thực sự xin lỗi vì đã làm bạn buồn. Mình sẽ cố gắng thay đổi để không lặp lại sai lầm này.",
+            "Lời xin lỗi có thể không sửa chữa được lỗi lầm, nhưng mình mong bạn biết mình thực sự hối hận và muốn sửa sai.",
+            "Mình xin lỗi vì những điều chưa phải. Hãy cho mình cơ hội để chứng minh sự thay đổi bằng hành động thực tế."
+        ])
     
-    # Ensure we have at least 3 suggestions
-    while len(suggestions) < 3:
-        suggestions.append("Hãy thành thật với cảm xúc của mình và chia sẻ một cách tôn trọng với đối phương.")
+    if any(word in request_lower for word in ["cảm ơn", "thank", "biết ơn"]):
+        suggestions.extend([
+            "Cảm ơn bạn vì đã luôn ở bên. Sự hiện diện của bạn rất ý nghĩa với mình và làm cuộc sống của mình tốt đẹp hơn.",
+            "Mình muốn bày tỏ lòng biết ơn vì tất cả những gì bạn đã làm. Bạn là món quà quý giá trong cuộc đời mình.",
+            "Cảm ơn không chỉ vì việc bạn làm, mà còn vì con người bạn đang là. Mình trân trọng từng khoảnh khắc bên bạn."
+        ])
     
-    return suggestions[:3]
+    if any(word in request_lower for word in ["yêu", "thích", "thương"]):
+        suggestions.extend([
+            "Mình không giỏi diễn đạt, nhưng trái tim mình biết nó thuộc về bạn. Mỗi ngày bên bạn đều đặc biệt.",
+            "Yêu là khi những điều nhỏ nhặt bên bạn trở nên đặc biệt. Mình cảm thấy hạnh phúc khi được là một phần cuộc sống của bạn.",
+            "Mình không cần lời hứa xa vời, chỉ cần được bên bạn mỗi ngày, cùng nhau trải qua những điều bình dị nhất."
+        ])
+    
+    if any(word in request_lower for word in ["buồn", "tâm sự", "chia sẻ"]):
+        suggestions.extend([
+            "Hôm nay mình cảm thấy hơi nặng lòng. Cảm ơn vì đã lắng nghe, chỉ cần có bạn ở đây thôi đã đủ ấm lòng.",
+            "Đôi khi buồn mà không biết vì sao. Chỉ cần bạn biết mình đang có một ngày khó khăn và ở bên mình thôi là được.",
+            "Buồn sẽ qua, nhưng tình bạn/tình yêu của chúng ta sẽ còn mãi. Cảm ơn vì luôn là điểm tựa của mình."
+        ])
+    
+    if any(word in request_lower for word in ["tức giận", "giận", "cãi nhau"]):
+        suggestions.extend([
+            "Mình biết cả hai đều đang khó chịu. Hãy cho nhau chút thời gian bình tĩnh, rồi chúng ta nói chuyện sau nhé.",
+            "Tức giận không giải quyết được gì. Mình muốn lắng nghe cảm nhận của bạn và cùng tìm giải pháp tốt nhất.",
+            "Dù có bất đồng, mình vẫn trân trọng bạn và mối quan hệ của chúng ta. Hãy cùng nhau vượt qua điều này."
+        ])
+    
+    # Generic suggestions if no keywords matched
+    if not suggestions:
+        suggestions = [
+            "Hãy thành thật với cảm xúc của mình và chia sẻ một cách tôn trọng với đối phương. Bắt đầu bằng 'Mình cảm thấy...' thay vì 'Bạn làm mình...'",
+            "Trong giao tiếp, sự chân thành quan trọng hơn sự hoàn hảo. Hãy nói những gì thật lòng bạn nghĩ, với thái độ xây dựng và tôn trọng.",
+            "Đôi khi không cần nhiều lời, chỉ cần một thông điệp ngắn gọn nhưng chân thành. Hãy tập trung vào cảm xúc thật của bạn."
+        ]
+    
+    return suggestions[:3]  # Return max 3 suggestions
+
+# ============================================
+# STREAMLIT APP MAIN FUNCTION
+# ============================================
+
+def main():
+    # Initialize managers
+    ai_db = AIContentDatabase()
+    user_manager = UserManager()
+    
+    # Hero Section
+    st.markdown("""
+    <div class="hero">
+        <h1>💬 EMOTICONN AI</h1>
+        <p>Trợ lý giao tiếp cảm xúc thông minh - Giúp bạn diễn đạt cảm xúc một cách tinh tế, xây dựng những mối quan hệ ý nghĩa trong hành trình trưởng thành.</p>
+        <p><i>Dành cho những người cô đơn muốn kết nối, những trái tim ngại ngùng muốn tỏ bày</i></p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Session state initialization
+    if 'phone_number' not in st.session_state:
+        st.session_state.phone_number = ""
+    if 'selected_category' not in st.session_state:
+        st.session_state.selected_category = "A1"
+    if 'selected_scenario' not in st.session_state:
+        st.session_state.selected_scenario = 0
+    
+    # Layout columns
+    col1, col2 = st.columns([1, 2])
+    
+    with col1:
+        # Free Trial Section
+        st.markdown("### 🆓 Dùng thử miễn phí")
+        
+        phone_input = st.text_input(
+            "Nhập số điện thoại của bạn:",
+            value=st.session_state.phone_number,
+            placeholder="0912345678",
+            key="phone_input_main"
+        )
+        
+        if phone_input:
+            st.session_state.phone_number = phone_input
+            
+            # Register if new phone
+            if not any(char.isdigit() for char in phone_input) or len(phone_input) < 9:
+                st.warning("⚠️ Vui lòng nhập số điện thoại hợp lệ (ít nhất 9 số)")
+            else:
+                user_manager.register_phone(phone_input)
+                remaining = user_manager.get_remaining_tries(phone_input)
+                is_premium = user_manager.is_premium(phone_input)
+                
+                if is_premium:
+                    st.success("🎉 **TÀI KHOẢN PREMIUM** - Sử dụng không giới hạn!")
+                    st.balloons()
+                else:
+                    # FIXED: Sử dụng st.markdown thay vì st.info với unsafe_allow_html
+                    st.markdown("**Bạn còn:**")
+                    st.markdown(f"<div class='badge'>{remaining}/5 lượt dùng thử</div>", unsafe_allow_html=True)
+                    
+                    # Progress indicator
+                    progress_value = remaining / 5
+                    st.progress(progress_value)
+                    
+                    if remaining == 0:
+                        st.error("❌ Bạn đã hết lượt dùng thử")
+                    elif remaining <= 2:
+                        st.warning(f"⚠️ Chỉ còn {remaining} lượt. Nâng cấp Premium để dùng không giới hạn!")
+        
+        st.markdown("---")
+        
+        # Categories Section
+        st.markdown("### 📚 Chọn tình huống")
+        
+        categories = ai_db.get_categories()
+        
+        # Hiển thị các category chính
+        category_groups = {
+            "🤝 Làm quen": ["A1", "A2", "A3"],
+            "💕 Đang tìm hiểu": ["B1"],
+            "❤️ Có tình cảm": ["C1"],
+            "👨‍💼 Trưởng thành": ["D1"],
+            "👫 Theo giới tính": ["E1", "E2"],
+        }
+        
+        # Add other categories
+        other_categories = [key for key in categories.keys() if key.startswith("X")]
+        if other_categories:
+            category_groups["🔍 Tình huống khác"] = other_categories[:5]  # Limit to 5
+        
+        for group_name, cat_ids in category_groups.items():
+            with st.expander(f"{group_name} ({len(cat_ids)})"):
+                for cat_id in cat_ids:
+                    if cat_id in categories:
+                        if st.button(
+                            f"📌 {categories[cat_id]['title']}", 
+                            key=f"cat_{cat_id}",
+                            use_container_width=True
+                        ):
+                            st.session_state.selected_category = cat_id
+                            st.session_state.selected_scenario = 0
+                            st.rerun()
+    
+    with col2:
+        # Main content area
+        if st.session_state.phone_number and st.session_state.phone_number != "":
+            remaining = user_manager.get_remaining_tries(st.session_state.phone_number)
+            is_premium = user_manager.is_premium(st.session_state.phone_number)
+            
+            if not is_premium and remaining <= 0:
+                # Show payment section
+                show_payment_section(user_manager)
+            else:
+                # Show AI suggestions
+                show_ai_suggestions(ai_db, user_manager)
+        else:
+            st.info("👆 **Vui lòng nhập số điện thoại để bắt đầu trải nghiệm**")
+            
+            # Show sample suggestions
+            st.markdown("### 💡 Mẫu gợi ý từ EMOTICONN AI")
+            
+            sample_categories = list(categories.keys())[:2]
+            for cat_id in sample_categories:
+                category = categories[cat_id]
+                with st.expander(f"📁 {category['title']}"):
+                    for i, scenario in enumerate(category['scenarios'][:1]):
+                        st.write(f"**Tình huống:** {scenario['context']}")
+                        st.write("**Gợi ý:**")
+                        for suggestion in scenario['suggestions'][:1]:
+                            st.markdown(f"""
+                            <div class="scenario-box">
+                            {suggestion}
+                            </div>
+                            """, unsafe_allow_html=True)
+            
+            # Benefits section
+            st.markdown("---")
+            st.markdown("### 🌟 Tại sao chọn EMOTICONN AI?")
+            
+            benefits_col1, benefits_col2, benefits_col3 = st.columns(3)
+            
+            with benefits_col1:
+                st.markdown("""
+                <div style="text-align: center; padding: 1rem;">
+                    <div style="font-size: 2rem;">💬</div>
+                    <strong>70,000+ Tình huống</strong>
+                    <p style="font-size: 0.9rem;">Phủ sóng mọi tình huống giao tiếp</p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with benefits_col2:
+                st.markdown("""
+                <div style="text-align: center; padding: 1rem;">
+                    <div style="font-size: 2rem;">🎯</div>
+                    <strong>Chuyên sâu tâm lý</strong>
+                    <p style="font-size: 0.9rem;">Hiểu đúng cảm xúc người trưởng thành</p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with benefits_col3:
+                st.markdown("""
+                <div style="text-align: center; padding: 1rem;">
+                    <div style="font-size: 2rem;">💰</div>
+                    <strong>Chỉ 199k/lifetime</strong>
+                    <p style="font-size: 0.9rem;">Đầu tư một lần, dùng mãi mãi</p>
+                </div>
+                """, unsafe_allow_html=True)
+    
+    # Footer
+    st.markdown("---")
+    st.markdown("""
+    <div class="footer">
+        <p>© 2024 EMOTICONN AI - Sản phẩm dành cho cộng đồng trưởng thành Việt</p>
+        <p>📧 Liên hệ: emoticonn.support@gmail.com | 🔒 Bảo mật & riêng tư là ưu tiên hàng đầu</p>
+        <p><small>AI không thay thế trị liệu tâm lý chuyên nghiệp. Trong khủng hoảng, hãy tìm chuyên gia.</small></p>
+    </div>
+    """, unsafe_allow_html=True)
+
+# ============================================
+# RUN THE APP
+# ============================================
 
 if __name__ == "__main__":
     main()
