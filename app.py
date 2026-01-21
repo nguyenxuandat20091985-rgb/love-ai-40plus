@@ -10,10 +10,547 @@ from pathlib import Path
 # ==================== CẤU HÌNH ====================
 st.set_page_config(
     page_title="EMOTICONN AI - Trợ Lý Giao Tiếp Cảm Xúc",
-    page_icon="💬",
-    layout="wide",
+    page_icon="✨",
+    layout="centered",
     initial_sidebar_state="collapsed"
 )
+
+# ==================== CSS HIỆN ĐẠI - LOAD TRƯỚC ====================
+st.markdown("""
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ===== RESET & GLOBAL ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.stApp {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    min-height: 100vh;
+}
+
+/* ===== HERO SECTION ===== */
+.hero-container {
+    background: linear-gradient(135deg, 
+        rgba(124, 58, 237, 1) 0%,
+        rgba(139, 92, 246, 1) 50%,
+        rgba(168, 85, 247, 1) 100%);
+    padding: 80px 24px 60px;
+    text-align: center;
+    border-radius: 0 0 32px 32px;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 40px;
+}
+
+.hero-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" opacity="0.1"><circle cx="50" cy="50" r="40" fill="none" stroke="white" stroke-width="0.5"/></svg>');
+    background-size: 300px;
+    animation: float 20s linear infinite;
+}
+
+@keyframes float {
+    0% { transform: translateY(0) rotate(0deg); }
+    100% { transform: translateY(-100px) rotate(360deg); }
+}
+
+.hero-icon {
+    font-size: 64px;
+    margin-bottom: 24px;
+    display: block;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.hero-title {
+    font-size: 48px;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 16px;
+    letter-spacing: -0.5px;
+    text-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.hero-tagline {
+    font-size: 20px;
+    color: rgba(255, 255, 255, 0.95);
+    margin-bottom: 12px;
+    font-weight: 400;
+    line-height: 1.5;
+}
+
+.hero-subtitle {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.85);
+    max-width: 600px;
+    margin: 0 auto;
+    font-weight: 300;
+}
+
+/* ===== NAVIGATION BAR ===== */
+.nav-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    padding: 20px 40px;
+    border-radius: 20px;
+    margin: -20px 24px 40px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    position: relative;
+    z-index: 10;
+    border: 1px solid rgba(124, 58, 237, 0.1);
+}
+
+.nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.brand-icon {
+    font-size: 24px;
+    color: #7c3aed;
+}
+
+.brand-text {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1e293b;
+    background: linear-gradient(90deg, #7c3aed, #8b5cf6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.nav-stats {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.rating {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.stars {
+    color: #fbbf24;
+    font-size: 18px;
+}
+
+.trial-badge {
+    background: linear-gradient(135deg, #10b981, #34d399);
+    color: white;
+    padding: 8px 20px;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 14px;
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+    white-space: nowrap;
+}
+
+/* ===== MAIN CONTENT CARD ===== */
+.main-content {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+.content-card {
+    background: white;
+    border-radius: 28px;
+    padding: 60px 48px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(124, 58, 237, 0.1);
+    margin-bottom: 40px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.content-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, #7c3aed, #8b5cf6, #a78bfa);
+}
+
+.card-icon {
+    font-size: 72px;
+    margin-bottom: 32px;
+    display: inline-block;
+    background: linear-gradient(135deg, #7c3aed, #8b5cf6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.card-title {
+    font-size: 36px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 20px;
+    line-height: 1.2;
+}
+
+.card-description {
+    font-size: 18px;
+    color: #64748b;
+    line-height: 1.6;
+    margin-bottom: 40px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* ===== PHONE INPUT STYLING ===== */
+.phone-input-container {
+    max-width: 400px;
+    margin: 0 auto 40px;
+}
+
+.stTextInput > div > div {
+    border-radius: 16px !important;
+    border: 2px solid #e2e8f0 !important;
+    padding: 8px 16px !important;
+    background: white !important;
+}
+
+.stTextInput > div > div > input {
+    font-size: 18px !important;
+    padding: 16px 20px !important;
+    border: none !important;
+    background: transparent !important;
+}
+
+.stTextInput > div > div > input:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.stTextInput > div > div > input::placeholder {
+    color: #94a3b8 !important;
+}
+
+/* ===== BUTTON STYLING ===== */
+.stButton > button {
+    border-radius: 16px !important;
+    padding: 20px 48px !important;
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    border: none !important;
+    background: linear-gradient(135deg, #f59e0b, #fbbf24) !important;
+    color: #1e293b !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 10px 30px rgba(245, 158, 11, 0.3) !important;
+    width: 100% !important;
+    max-width: 400px;
+    margin: 0 auto;
+    display: block;
+}
+
+.stButton > button:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 15px 40px rgba(245, 158, 11, 0.4) !important;
+}
+
+/* ===== FEATURES GRID ===== */
+.features-section {
+    margin: 60px 0;
+}
+
+.features-title {
+    text-align: center;
+    font-size: 32px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 48px;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    margin-top: 32px;
+}
+
+.feature-card {
+    background: white;
+    padding: 32px 24px;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(124, 58, 237, 0.1);
+    transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+}
+
+.feature-icon {
+    font-size: 48px;
+    margin-bottom: 20px;
+    display: block;
+}
+
+.feature-card:nth-child(1) .feature-icon { color: #7c3aed; }
+.feature-card:nth-child(2) .feature-icon { color: #ec4899; }
+.feature-card:nth-child(3) .feature-icon { color: #f59e0b; }
+.feature-card:nth-child(4) .feature-icon { color: #10b981; }
+
+.feature-name {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 12px;
+}
+
+.feature-desc {
+    font-size: 14px;
+    color: #64748b;
+    line-height: 1.5;
+}
+
+/* ===== TRIAL PROGRESS ===== */
+.trial-card {
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border-radius: 24px;
+    padding: 40px;
+    margin: 40px 0;
+    border-left: 6px solid #f59e0b;
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.progress-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #92400e;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.progress-count {
+    font-size: 28px;
+    font-weight: 700;
+    color: #7c3aed;
+}
+
+.progress-bar-container {
+    background: rgba(255, 255, 255, 0.7);
+    height: 14px;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #7c3aed, #8b5cf6);
+    border-radius: 10px;
+    transition: width 0.6s ease;
+}
+
+.progress-note {
+    text-align: center;
+    color: #92400e;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* ===== MESSAGE CREATOR ===== */
+.message-creator {
+    background: white;
+    border-radius: 28px;
+    padding: 60px 48px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+    margin: 40px 0;
+}
+
+.creator-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: #1e293b;
+    text-align: center;
+    margin-bottom: 16px;
+}
+
+.creator-subtitle {
+    font-size: 18px;
+    color: #64748b;
+    text-align: center;
+    margin-bottom: 48px;
+    line-height: 1.6;
+}
+
+/* ===== INPUT SECTIONS ===== */
+.input-section {
+    margin-bottom: 32px;
+}
+
+.section-label {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 16px;
+    display: block;
+}
+
+.gender-container {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.gender-option {
+    flex: 1;
+    padding: 20px;
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 16px;
+    font-weight: 500;
+    color: #475569;
+}
+
+.gender-option:hover {
+    background: white;
+    border-color: #8b5cf6;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(139, 92, 246, 0.1);
+}
+
+.gender-option.selected {
+    background: rgba(139, 92, 246, 0.1);
+    border-color: #8b5cf6;
+    color: #7c3aed;
+}
+
+/* ===== STREAMLIT OVERRIDES ===== */
+.stSelectbox > div > div {
+    border-radius: 16px !important;
+    border: 2px solid #e2e8f0 !important;
+    padding: 8px 16px !important;
+    background: white !important;
+}
+
+.stSelectbox > div > div > div {
+    padding: 16px !important;
+    font-size: 16px !important;
+}
+
+.stTextArea > div > div {
+    border-radius: 16px !important;
+    border: 2px solid #e2e8f0 !important;
+    padding: 8px 16px !important;
+    background: white !important;
+}
+
+.stTextArea > div > div > textarea {
+    font-size: 16px !important;
+    padding: 16px !important;
+    min-height: 120px !important;
+    border: none !important;
+    background: transparent !important;
+}
+
+/* ===== MESSAGE RESULT ===== */
+.message-result {
+    background: linear-gradient(135deg, #f8fafc, #ffffff);
+    border-radius: 24px;
+    padding: 48px;
+    margin: 40px 0;
+    border: 1px solid rgba(124, 58, 237, 0.1);
+    position: relative;
+}
+
+.result-label {
+    position: absolute;
+    top: -20px;
+    left: 40px;
+    background: linear-gradient(135deg, #7c3aed, #8b5cf6);
+    color: white;
+    padding: 12px 32px;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 16px;
+    box-shadow: 0 8px 25px rgba(124, 58, 237, 0.3);
+}
+
+.result-content {
+    font-size: 20px;
+    line-height: 1.8;
+    color: #1e293b;
+    margin: 32px 0;
+    padding: 32px;
+    background: white;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+}
+
+/* ===== ACTION BUTTONS ===== */
+.action-buttons {
+    display: flex;
+    gap: 16px;
+    margin-top: 32px;
+}
+
+.action-btn {
+    flex: 1;
+    padding: 18px !important;
+    border-radius: 14px !important;
+    font-weight: 600 !important;
+    font-size: 16px !important;
+}
+
+/* ===== HIDE STREAMLIT ELEMENTS ===== */
+#MainMenu { display: none !important; }
+footer { display: none !important; }
+.stDeployButton { display: none !important; }
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+    .hero-title { font-size: 36px; }
+    .hero-tagline { font-size: 18px; }
+    .nav-bar { flex-direction: column; gap: 16px; padding: 20px; }
+    .content-card, .message-creator { padding: 40px 24px; }
+    .card-title { font-size: 28px; }
+    .features-grid { grid-template-columns: 1fr; }
+    .gender-container { flex-direction: column; }
+    .action-buttons { flex-direction: column; }
+}
+</style>
+""", unsafe_allow_html=True)
 
 # ==================== HẰNG SỐ ====================
 FREE_TRIAL_LIMIT = 5
@@ -24,497 +561,7 @@ BANK_INFO = {
     "note_format": "EMOTICONN [SỐ ĐIỆN THOẠI]"
 }
 
-# ==================== CSS CAO CẤP ====================
-st.markdown("""
-<style>
-/* === RESET & BASE === */
-.stApp {
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-}
-
-/* === HEADER SECTION === */
-.header-wrapper {
-    background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
-    padding: 4rem 2rem 3rem;
-    text-align: center;
-    margin-bottom: 3rem;
-    border-radius: 0 0 30px 30px;
-    position: relative;
-    overflow: hidden;
-}
-
-.header-wrapper::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="1" fill="white" opacity="0.1"/></svg>');
-    background-size: 50px;
-}
-
-.logo-icon {
-    font-size: 4rem;
-    margin-bottom: 1rem;
-    display: block;
-}
-
-.header-title {
-    font-size: 3.5rem;
-    font-weight: 800;
-    color: white;
-    margin-bottom: 0.5rem;
-    letter-spacing: -0.5px;
-}
-
-.header-tagline {
-    font-size: 1.4rem;
-    color: rgba(255, 255, 255, 0.95);
-    margin-bottom: 1rem;
-    font-weight: 400;
-    line-height: 1.5;
-}
-
-.header-subtitle {
-    font-size: 1rem;
-    color: rgba(255, 255, 255, 0.85);
-    max-width: 600px;
-    margin: 0 auto;
-}
-
-/* === NAVIGATION BAR === */
-.nav-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: white;
-    padding: 1.2rem 2.5rem;
-    border-radius: 20px;
-    margin: 0 2rem 3rem;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-    border: 1px solid rgba(124, 58, 237, 0.1);
-}
-
-.nav-brand {
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-}
-
-.brand-icon {
-    font-size: 1.8rem;
-    color: #7c3aed;
-}
-
-.brand-name {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: #1e293b;
-    letter-spacing: -0.3px;
-}
-
-.nav-stats {
-    display: flex;
-    align-items: center;
-    gap: 2rem;
-}
-
-.rating-badge {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: #64748b;
-    font-weight: 500;
-}
-
-.star-icon {
-    color: #fbbf24;
-    font-size: 1.2rem;
-}
-
-.trial-badge {
-    background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
-    color: white;
-    padding: 0.5rem 1.2rem;
-    border-radius: 25px;
-    font-weight: 600;
-    font-size: 0.95rem;
-    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
-}
-
-/* === MAIN CONTENT CARD === */
-.main-content {
-    max-width: 900px;
-    margin: 0 auto;
-    padding: 0 2rem;
-}
-
-.content-card {
-    background: white;
-    border-radius: 24px;
-    padding: 3rem;
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
-    border: 1px solid rgba(124, 58, 237, 0.08);
-    margin-bottom: 2.5rem;
-}
-
-.card-icon-large {
-    font-size: 4rem;
-    text-align: center;
-    margin-bottom: 1.5rem;
-    display: block;
-}
-
-.card-title {
-    font-size: 2.2rem;
-    font-weight: 700;
-    color: #1e293b;
-    text-align: center;
-    margin-bottom: 1rem;
-    line-height: 1.3;
-}
-
-.card-subtitle {
-    font-size: 1.1rem;
-    color: #64748b;
-    text-align: center;
-    line-height: 1.6;
-    margin-bottom: 2.5rem;
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-/* === TRIAL PROGRESS === */
-.trial-progress {
-    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-    border-radius: 20px;
-    padding: 2.5rem;
-    margin: 2rem 0;
-    border-left: 5px solid #f59e0b;
-}
-
-.progress-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-}
-
-.progress-title {
-    font-size: 1.4rem;
-    font-weight: 600;
-    color: #92400e;
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-}
-
-.progress-count {
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: #7c3aed;
-}
-
-.progress-bar-container {
-    background: rgba(255, 255, 255, 0.5);
-    height: 12px;
-    border-radius: 10px;
-    overflow: hidden;
-    margin-bottom: 1rem;
-}
-
-.progress-bar {
-    height: 100%;
-    background: linear-gradient(90deg, #8b5cf6, #a78bfa);
-    border-radius: 10px;
-    transition: width 0.6s ease;
-}
-
-.progress-label {
-    text-align: center;
-    color: #64748b;
-    font-size: 0.95rem;
-}
-
-/* === MESSAGE CREATOR === */
-.message-creator {
-    background: white;
-    border-radius: 24px;
-    padding: 3rem;
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
-    margin: 3rem 0;
-}
-
-.creator-header {
-    text-align: center;
-    margin-bottom: 3rem;
-}
-
-.creator-icon {
-    font-size: 3.5rem;
-    margin-bottom: 1.5rem;
-}
-
-.creator-title {
-    font-size: 2rem;
-    font-weight: 700;
-    color: #1e293b;
-    margin-bottom: 1rem;
-}
-
-.creator-description {
-    font-size: 1.1rem;
-    color: #64748b;
-    line-height: 1.6;
-    max-width: 600px;
-    margin: 0 auto;
-}
-
-/* === INPUT STYLING === */
-.input-section {
-    margin-bottom: 2.5rem;
-}
-
-.input-label {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #1e293b;
-    margin-bottom: 0.8rem;
-    display: block;
-}
-
-.gender-selector {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 2rem;
-}
-
-.gender-option {
-    flex: 1;
-    padding: 1.2rem;
-    background: #f8fafc;
-    border: 2px solid #e2e8f0;
-    border-radius: 16px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-weight: 500;
-    color: #475569;
-}
-
-.gender-option:hover {
-    background: white;
-    border-color: #8b5cf6;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(139, 92, 246, 0.1);
-}
-
-.gender-option.selected {
-    background: rgba(139, 92, 246, 0.1);
-    border-color: #8b5cf6;
-    color: #7c3aed;
-}
-
-.stSelectbox > div > div > div {
-    border-radius: 16px !important;
-    border: 2px solid #e2e8f0 !important;
-    padding: 1rem !important;
-    font-size: 1rem !important;
-    background: white !important;
-}
-
-.stTextArea > div > div > textarea {
-    border-radius: 16px !important;
-    border: 2px solid #e2e8f0 !important;
-    padding: 1.2rem !important;
-    font-size: 1rem !important;
-    background: white !important;
-    min-height: 120px;
-}
-
-/* === BUTTON STYLING === */
-.generate-button {
-    background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%) !important;
-    color: #1e293b !important;
-    border: none !important;
-    padding: 1.2rem 3rem !important;
-    font-size: 1.2rem !important;
-    font-weight: 600 !important;
-    border-radius: 16px !important;
-    transition: all 0.3s ease !important;
-    width: 100% !important;
-    box-shadow: 0 8px 25px rgba(245, 158, 11, 0.2) !important;
-}
-
-.generate-button:hover {
-    transform: translateY(-3px) !important;
-    box-shadow: 0 15px 35px rgba(245, 158, 11, 0.3) !important;
-}
-
-/* === MESSAGE RESULT === */
-.message-result {
-    background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
-    border-radius: 24px;
-    padding: 3rem;
-    margin: 3rem 0;
-    border: 1px solid rgba(124, 58, 237, 0.1);
-    position: relative;
-    overflow: hidden;
-}
-
-.message-result::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 5px;
-    background: linear-gradient(90deg, #8b5cf6, #a78bfa);
-}
-
-.result-label {
-    position: absolute;
-    top: -15px;
-    left: 30px;
-    background: linear-gradient(135deg, #8b5cf6, #a78bfa);
-    color: white;
-    padding: 0.8rem 2rem;
-    border-radius: 25px;
-    font-weight: 600;
-    font-size: 1rem;
-    box-shadow: 0 5px 15px rgba(139, 92, 246, 0.3);
-    z-index: 2;
-}
-
-.result-content {
-    font-size: 1.3rem;
-    line-height: 1.8;
-    color: #1e293b;
-    margin: 1.5rem 0 2.5rem;
-    padding: 1.5rem;
-    background: white;
-    border-radius: 16px;
-    border: 1px solid #e2e8f0;
-}
-
-.action-buttons {
-    display: flex;
-    gap: 1rem;
-    margin-top: 2rem;
-}
-
-.action-btn {
-    flex: 1;
-    padding: 1rem !important;
-    border-radius: 14px !important;
-    font-weight: 600 !important;
-    font-size: 1rem !important;
-}
-
-.copy-btn {
-    background: linear-gradient(135deg, #10b981 0%, #34d399 100%) !important;
-    color: white !important;
-}
-
-.new-btn {
-    background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%) !important;
-    color: white !important;
-}
-
-.save-btn {
-    background: white !important;
-    color: #64748b !important;
-    border: 2px solid #e2e8f0 !important;
-}
-
-/* === HIDE DEFAULT ELEMENTS === */
-#MainMenu, footer, header {
-    visibility: hidden;
-    height: 0;
-}
-
-/* === RESPONSIVE DESIGN === */
-@media (max-width: 768px) {
-    .header-title {
-        font-size: 2.5rem;
-    }
-    
-    .header-tagline {
-        font-size: 1.2rem;
-    }
-    
-    .nav-bar {
-        flex-direction: column;
-        gap: 1rem;
-        padding: 1.5rem;
-        margin: 0 1rem 2rem;
-    }
-    
-    .content-card, .message-creator, .message-result {
-        padding: 2rem;
-        margin: 1.5rem 1rem;
-    }
-    
-    .card-title {
-        font-size: 1.8rem;
-    }
-    
-    .gender-selector {
-        flex-direction: column;
-    }
-    
-    .action-buttons {
-        flex-direction: column;
-    }
-}
-
-/* === CUSTOM RADIO BUTTONS === */
-.stRadio > div {
-    flex-direction: row;
-    gap: 1rem;
-}
-
-.stRadio > div > label {
-    background: #f8fafc;
-    border: 2px solid #e2e8f0;
-    border-radius: 14px;
-    padding: 1rem 1.5rem;
-    font-weight: 500;
-    color: #475569;
-    transition: all 0.3s ease;
-}
-
-.stRadio > div > label:hover {
-    background: white;
-    border-color: #8b5cf6;
-    transform: translateY(-2px);
-}
-
-/* === SCROLLBAR === */
-::-webkit-scrollbar {
-    width: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: #f1f5f9;
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
-}
-</style>
-""", unsafe_allow_html=True)
-
-# ==================== DỮ LIỆU ====================
+# ==================== DATA FUNCTIONS ====================
 DATA_DIR = Path("data")
 DATA_DIR.mkdir(exist_ok=True)
 USAGE_FILE = DATA_DIR / "usage.csv"
@@ -582,50 +629,20 @@ class EmotionalAI:
         self.templates = {
             "Làm quen": {
                 "Nam→Nữ": [
-                    "Chào bạn, mình là {name} từ {context}. Mình ấn tượng với cách bạn {detail} và muốn làm quen nếu không phiền. Hôm nay của bạn thế nào? 🌸",
-                    "Xin chào, hy vọng tin nhắn này không đến bất ngờ. Mình thấy chúng ta có chung {interest}. Bạn có muốn trao đổi thêm không? ☕",
-                    "Chào bạn, mình vừa nhớ đến cuộc trò chuyện của chúng ta hôm {time}. Bạn có khoẻ không? Công việc tuần này thế nào rồi? 💼"
+                    "Chào bạn, mình là {name}. Mình thấy {detail} và muốn làm quen nếu không phiền. Hôm nay của bạn thế nào? ☕",
+                    "Xin chào, hy vọng tin nhắn này không làm phiền. Công việc của bạn dạo này ổn chứ? Mình muốn làm quen và trò chuyện. 💼",
                 ],
                 "Nữ→Nam": [
-                    "Chào anh, em là {name} đây. Em muốn gửi lời cảm ơn vì {reason} hôm trước. Anh có vài phút rảnh trò chuyện không? 💫",
-                    "Xin chào, em thấy anh rất {trait} trong {context}. Em muốn làm quen nếu anh không ngại. Anh đang bận việc gì không? 🤗",
-                    "Chào anh, hy vọng anh có một ngày tốt lành. Em có chút thắc mắc về {topic}, không biết có thể hỏi ý kiến anh được không? 💭"
+                    "Chào anh, em là {name} đây. Anh có vài phút trò chuyện không? Em muốn làm quen. 🌸",
+                    "Xin chào, em muốn làm quen nếu anh không ngại. Anh đang bận gì không? 🤗",
                 ]
             },
             "Hỏi thăm": {
                 "Nam→Nữ": [
                     "Dạo này bạn thế nào? Công việc có đỡ áp lực hơn không? Nếu có gì cần chia sẻ, mình luôn sẵn sàng lắng nghe bạn. 🌿",
-                    "Chào bạn, mình nhớ đến bạn và muốn hỏi thăm. Mọi thứ ổn chứ? Có gì mình có thể giúp đỡ được không? 🤝",
-                    "Hy vọng bạn có một ngày nhẹ nhàng. Công việc tuần này thế nào rồi? Nếu có áp lực gì, đừng ngại chia sẻ với mình nhé. 💪"
                 ],
                 "Nữ→Nam": [
-                    "Anh ơi, dạo này anh có khoẻ không? Công việc nhiều quá có mệt không? Nhớ chăm sóc sức khoẻ, đừng thức khuya nhiều nhé. 🫂",
-                    "Chào anh, em muốn hỏi thăm anh một chút. Mọi thứ ổn chứ? Có gì anh muốn tâm sự không? Em ở đây để lắng nghe. 🌻",
-                    "Em nghĩ đến anh và muốn gửi lời hỏi thăm. Hy vọng anh đang có một ngày làm việc hiệu quả và vui vẻ. 🌞"
-                ]
-            },
-            "An ủi": {
-                "Nam→Nữ": [
-                    "Mình biết những ngày này không dễ dàng với bạn. Hãy nhớ rằng bạn không đơn độc, mọi khó khăn rồi sẽ qua thôi. 🫂",
-                    "Những ngày mưa nào rồi cũng sẽ tạnh. Hãy cho phép bản thân được cảm thấy, được mệt mỏi. Mình ở đây nếu bạn cần một người lắng nghe. 🌧️→🌈",
-                    "Đôi khi trái tim cần những ngày mưa để rửa trôi. Mình tin bạn đủ mạnh mẽ để vượt qua. Có gì cứ chia sẻ với mình nhé. 🌱"
-                ],
-                "Nữ→Nam": [
-                    "Em biết anh đang rất mệt mỏi và áp lực. Hãy nhớ chăm sóc bản thân mình nhé. Sức khoẻ và sự bình yên trong tâm hồn mới là quan trọng nhất. 💖",
-                    "Anh đừng ôm đồm mọi thứ một mình. Em ở đây để lắng nghe và ủng hộ anh. Mọi khó khăn rồi cũng sẽ qua, chúng ta cùng nhau vượt qua nhé. 🤲",
-                    "Em thấy anh mệt. Hãy dành chút thời gian nghỉ ngơi, tạm gác lại mọi thứ. Đừng quá khắt khe với bản thân, anh nhé. 🕊️"
-                ]
-            },
-            "Tỏ tình": {
-                "Nam→Nữ": [
-                    "Anh không giỏi nói những lời hoa mỹ. Chỉ biết rằng mỗi ngày có em bên cạnh là điều bình yên và hạnh phúc nhất với anh. Cảm ơn em đã đến. 💞",
-                    "Có những điều đơn giản làm anh hạnh phúc: nụ cười của em, cách em quan tâm, sự dịu dàng của em, và cả những khoảnh khắc im lặng bên nhau. 🍃",
-                    "Tình cảm anh dành cho em không phải là lời hứa xa xôi, mà là sự trân trọng từng ngày được bên em, được chứng kiến em cười, được thấy em hạnh phúc. 🏡"
-                ],
-                "Nữ→Nam": [
-                    "Em không biết diễn tả thế nào, chỉ biết rằng mỗi ngày có anh là một món quà quý giá. Cảm ơn anh vì tất cả những điều nhỏ bé anh dành cho em. 🌸",
-                    "Yêu anh là chọn nhau mỗi ngày, là thấu hiểu sau những bất đồng, là cùng nhau trưởng thành và xây dựng. Em biết ơn vì được cùng anh viết nên câu chuyện của chúng ta. 🌻",
-                    "Với em, tình yêu không phải những lời lớn lao, mà là những điều nhỏ bé anh dành cho em mỗi ngày: cái ôm khi mệt mỏi, lời động viên khi thất bại, nụ cười khi thành công. 💝"
+                    "Anh ơi, dạo này anh có khoẻ không? Công việc nhiều quá có mệt không? Nhớ chăm sóc sức khoẻ nhé. 🫂",
                 ]
             }
         }
@@ -636,27 +653,14 @@ class EmotionalAI:
         if situation in self.templates and gender_key in self.templates[situation]:
             templates = self.templates[situation][gender_key]
         else:
-            templates = ["Xin chào, hy vọng bạn có một ngày tốt lành và tràn đầy năng lượng. 💫"]
+            templates = ["Xin chào, hy vọng bạn có một ngày tốt lành. 💫"]
         
         template = random.choice(templates)
         
         if context:
-            name = "mình"
-            detail = context[:40] + "..." if len(context) > 40 else context
-            
-            replacements = {
-                "{name}": name,
-                "{context}": "đây",
-                "{detail}": detail,
-                "{interest}": "quan điểm sống",
-                "{time}": "trước",
-                "{reason}": "sự giúp đỡ",
-                "{trait}": "tử tế",
-                "{topic}": "vấn đề này"
-            }
-            
-            for key, value in replacements.items():
-                template = template.replace(key, value)
+            detail = context[:50] + "..." if len(context) > 50 else context
+            template = template.replace("{name}", "mình")
+            template = template.replace("{detail}", detail)
         
         return template
 
@@ -673,22 +677,14 @@ def main():
         st.session_state.usage_count = 0
     if 'result' not in st.session_state:
         st.session_state.result = ""
-    if 'user_gender' not in st.session_state:
-        st.session_state.user_gender = "Nam"
-    if 'target_gender' not in st.session_state:
-        st.session_state.target_gender = "Nữ"
     
-    # Kiểm tra query params
-    query_params = st.query_params
-    show_upgrade = query_params.get("upgrade") == "true"
-    
-    # ===== HEADER =====
+    # ===== HERO SECTION =====
     st.markdown("""
-    <div class="header-wrapper">
-        <div class="logo-icon">💬</div>
-        <h1 class="header-title">EMOTICONN AI</h1>
-        <p class="header-tagline">Nói điều bạn muốn - Theo cách họ muốn nghe</p>
-        <p class="header-subtitle">Trợ lý giao tiếp cảm xúc dành cho người trưởng thành</p>
+    <div class="hero-container">
+        <div class="hero-icon">💬</div>
+        <h1 class="hero-title">EMOTICONN AI</h1>
+        <p class="hero-tagline">Nói điều bạn muốn - Theo cách họ muốn nghe</p>
+        <p class="hero-subtitle">Trợ lý giao tiếp cảm xúc dành cho người trưởng thành</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -697,12 +693,12 @@ def main():
     <div class="nav-bar">
         <div class="nav-brand">
             <span class="brand-icon">🏠</span>
-            <span class="brand-name">EMOTICONN AI</span>
+            <span class="brand-text">EMOTICONN AI</span>
         </div>
         <div class="nav-stats">
-            <div class="rating-badge">
-                <span class="star-icon">⭐</span>
-                <span>4.9/5 từ 2,500+ người dùng</span>
+            <div class="rating">
+                <span class="stars">⭐⭐⭐⭐⭐</span>
+                <span>4.9/5 từ 2,500+</span>
             </div>
             <div class="trial-badge">5 lượt dùng thử</div>
         </div>
@@ -712,58 +708,89 @@ def main():
     # ===== MAIN CONTENT =====
     st.markdown('<div class="main-content">', unsafe_allow_html=True)
     
-    # Kiểm tra đăng nhập
     if not st.session_state.verified:
-        # Hiển thị trang đăng ký
+        # ===== REGISTRATION CARD =====
         st.markdown("""
         <div class="content-card">
-            <div class="card-icon-large">🔓</div>
+            <div class="card-icon">🔓</div>
             <h2 class="card-title">Bắt Đầu Hành Trình Cảm Xúc</h2>
-            <p class="card-subtitle">
+            <p class="card-description">
                 Nhận ngay <strong style="color: #7c3aed;">5 tin nhắn AI tinh tế</strong> hoàn toàn miễn phí<br>
                 Khám phá sức mạnh của giao tiếp thấu hiểu
             </p>
-        </div>
+            
+            <div class="phone-input-container">
         """, unsafe_allow_html=True)
         
         # Phone input
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            phone_input = st.text_input(
-                "**Số điện thoại của bạn**",
-                placeholder="0912345678",
-                help="Nhập số điện thoại Việt Nam để bắt đầu dùng thử",
-                key="verification_phone"
-            )
+        phone = st.text_input(
+            "",
+            placeholder="Nhập số điện thoại của bạn...",
+            key="phone_input",
+            label_visibility="collapsed"
+        )
         
-        # Verify button
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            if st.button("✨ **NHẬN 5 TIN MIỄN PHÍ**", 
-                        type="primary", 
-                        use_container_width=True,
-                        key="verify_btn"):
-                if phone_input:
-                    valid_phone = validate_phone(phone_input)
-                    if valid_phone:
-                        st.session_state.phone = valid_phone
-                        st.session_state.verified = True
-                        
-                        paid_users = load_paid_users()
-                        if valid_phone in paid_users:
-                            st.session_state.paid = True
-                        else:
-                            st.session_state.usage_count = get_usage_count(valid_phone)
-                        
-                        st.success("✅ **Kết nối thành công!**")
-                        time.sleep(1.5)
-                        st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        # Register button
+        if st.button("✨ **NHẬN 5 TIN MIỄN PHÍ**", 
+                    type="primary", 
+                    key="register_btn"):
+            if phone:
+                valid_phone = validate_phone(phone)
+                if valid_phone:
+                    st.session_state.phone = valid_phone
+                    st.session_state.verified = True
+                    
+                    paid_users = load_paid_users()
+                    if valid_phone in paid_users:
+                        st.session_state.paid = True
                     else:
-                        st.error("⚠️ Số điện thoại không hợp lệ. Vui lòng nhập số Việt Nam 10-11 số.")
+                        st.session_state.usage_count = get_usage_count(valid_phone)
+                    
+                    st.success("✅ **Đăng ký thành công!**")
+                    time.sleep(1.5)
+                    st.rerun()
                 else:
-                    st.warning("📱 Vui lòng nhập số điện thoại để tiếp tục")
+                    st.error("⚠️ Vui lòng nhập số điện thoại hợp lệ")
+            else:
+                st.warning("📱 Vui lòng nhập số điện thoại")
         
-        # Features showcase (sẽ thêm sau)
+        st.markdown('</div>', unsafe_allow_html=True)  # Close content-card
+        
+        # ===== FEATURES SECTION =====
+        st.markdown("""
+        <div class="features-section">
+            <h2 class="features-title">✨ Tại Sao Chọn EMOTICONN AI?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3 class="feature-name">Dành cho người trưởng thành</h3>
+                    <p class="feature-desc">Ngôn từ tinh tế, sâu sắc, không sáo rỗng, phù hợp độ tuổi 30-55+</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">💝</div>
+                    <h3 class="feature-name">7,000+ tình huống</h3>
+                    <p class="feature-desc">Hệ thống AI thấu hiểu mọi ngữ cảnh giao tiếp phức tạp</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🔥</div>
+                    <h3 class="feature-name">5 lượt dùng thử</h3>
+                    <p class="feature-desc">Trải nghiệm chất lượng cao trước khi quyết định đầu tư</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">💎</div>
+                    <h3 class="feature-name">Giá trị trọn đời</h3>
+                    <p class="feature-desc">Chỉ 149.000đ - Sử dụng mãi mãi, cập nhật miễn phí</p>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)  # Close main-content
         return
     
     # ===== TRIAL PROGRESS =====
@@ -772,15 +799,12 @@ def main():
         
         if remaining <= 0:
             st.warning("Bạn đã hết lượt dùng thử!")
-            if st.button("💎 Nâng cấp tài khoản Premium", type="primary"):
-                st.query_params["upgrade"] = "true"
-                st.rerun()
             return
         
         percentage = (st.session_state.usage_count / FREE_TRIAL_LIMIT) * 100
         
         st.markdown(f"""
-        <div class="trial-progress">
+        <div class="trial-card">
             <div class="progress-header">
                 <div class="progress-title">
                     <span>🎯</span>
@@ -791,57 +815,54 @@ def main():
             <div class="progress-bar-container">
                 <div class="progress-bar" style="width: {percentage}%"></div>
             </div>
-            <div class="progress-label">Mỗi tin nhắn đều được AI tạo riêng cho tình huống của bạn</div>
+            <div class="progress-note">Mỗi tin nhắn đều được AI tạo riêng cho tình huống của bạn</div>
         </div>
         """, unsafe_allow_html=True)
     
     # ===== MESSAGE CREATOR =====
     st.markdown("""
     <div class="message-creator">
-        <div class="creator-header">
-            <div class="creator-icon">✍️</div>
-            <h2 class="creator-title">Tạo Tin Nhắn Tinh Tế</h2>
-            <p class="creator-description">
-                Chia sẻ tình huống của bạn, để AI thấu hiểu và giúp bạn diễn đạt cảm xúc một cách chân thành, phù hợp
-            </p>
-        </div>
+        <h2 class="creator-title">✍️ Tạo Tin Nhắn Tinh Tế</h2>
+        <p class="creator-subtitle">
+            Chia sẻ tình huống của bạn, để AI thấu hiểu và giúp bạn diễn đạt cảm xúc một cách chân thành, phù hợp
+        </p>
+        
+        <div class="input-section">
+            <label class="section-label">👥 Chọn giới tính</label>
+            <div class="gender-container">
     """, unsafe_allow_html=True)
     
     # Gender selection
-    st.markdown('<div class="input-section">', unsafe_allow_html=True)
-    st.markdown('<div class="input-label">👥 Chọn giới tính</div>', unsafe_allow_html=True)
-    
     col1, col2 = st.columns(2)
-    
     with col1:
-        st.markdown('<div class="input-label" style="margin-bottom: 0.5rem;">Bạn là:</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-label" style="font-size: 14px;">Bạn là:</div>', unsafe_allow_html=True)
         user_gender = st.radio(
-            "Bạn là:",
+            "",
             ["Nam", "Nữ"],
             horizontal=True,
             label_visibility="collapsed",
-            key="user_gender_radio"
+            key="user_gender"
         )
     
     with col2:
-        st.markdown('<div class="input-label" style="margin-bottom: 0.5rem;">Gửi cho:</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-label" style="font-size: 14px;">Gửi cho:</div>', unsafe_allow_html=True)
         target_gender = st.radio(
-            "Gửi cho:",
+            "",
             ["Nam", "Nữ"],
             horizontal=True,
             label_visibility="collapsed",
-            key="target_gender_radio"
+            key="target_gender"
         )
     
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown('</div></div>', unsafe_allow_html=True)
     
     # Situation selection
     st.markdown('<div class="input-section">', unsafe_allow_html=True)
-    st.markdown('<div class="input-label">💭 Chọn tình huống</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-label">💭 Chọn tình huống</div>', unsafe_allow_html=True)
     
     situation = st.selectbox(
-        "Chọn tình huống:",
-        ["Làm quen", "Hỏi thăm", "An ủi", "Tỏ tình", "Làm hoà", "Hẹn hò", "Chia sẻ", "Động viên"],
+        "",
+        ["Làm quen", "Hỏi thăm", "An ủi", "Tỏ tình", "Làm hoà"],
         index=1,
         label_visibility="collapsed"
     )
@@ -850,14 +871,13 @@ def main():
     
     # Context input
     st.markdown('<div class="input-section">', unsafe_allow_html=True)
-    st.markdown('<div class="input-label">📝 Thêm chi tiết (tuỳ chọn)</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-label">📝 Thêm chi tiết (tuỳ chọn)</div>', unsafe_allow_html=True)
     
     context = st.text_area(
-        "Thêm chi tiết:",
-        placeholder="Ví dụ: Chúng ta mới quen qua ứng dụng hẹn hò, bạn ấy là kiến trúc sư 35 tuổi...\nHoặc: Anh ấy đang stress vì công việc, tôi muốn an ủi và động viên...",
+        "",
+        placeholder="Ví dụ: Chúng ta mới quen qua ứng dụng hẹn hò, bạn ấy là kiến trúc sư 35 tuổi...",
         height=120,
-        label_visibility="collapsed",
-        help="Càng chi tiết, tin nhắn càng cá nhân hoá và phù hợp"
+        label_visibility="collapsed"
     )
     
     st.markdown('</div>', unsafe_allow_html=True)
@@ -874,13 +894,12 @@ def main():
             
             if remaining < 0:
                 st.error("Bạn đã hết lượt dùng thử!")
-                st.query_params["upgrade"] = "true"
-                st.rerun()
+                return
         
         # Generate message
         ai = EmotionalAI()
-        with st.spinner("🤖 AI đang thấu hiểu cảm xúc và tạo tin nhắn chân thành cho bạn..."):
-            time.sleep(1.5)
+        with st.spinner("🤖 AI đang tạo tin nhắn..."):
+            time.sleep(1)
             result = ai.generate(user_gender, target_gender, situation, context)
             st.session_state.result = result
     
@@ -888,49 +907,25 @@ def main():
     
     # ===== MESSAGE RESULT =====
     if st.session_state.result:
-        st.markdown("""
+        st.markdown(f"""
         <div class="message-result">
             <div class="result-label">💌 Tin nhắn gợi ý</div>
-            <div class="result-content">{}</div>
-            <div class="action-buttons">
-        """.format(st.session_state.result), unsafe_allow_html=True)
+            <div class="result-content">{st.session_state.result}</div>
+        </div>
+        """, unsafe_allow_html=True)
         
         # Action buttons
         col1, col2, col3 = st.columns(3)
-        
         with col1:
-            if st.button("📋 Copy tin nhắn", key="copy_btn", use_container_width=True):
-                st.success("✅ Đã copy tin nhắn vào clipboard!")
-        
+            if st.button("📋 Copy", key="copy_btn", use_container_width=True):
+                st.success("✅ Đã copy!")
         with col2:
-            if st.button("🔄 Tạo tin mới", key="new_btn", use_container_width=True):
+            if st.button("🔄 Tạo mới", key="new_btn", use_container_width=True):
                 st.session_state.result = ""
                 st.rerun()
-        
         with col3:
             if st.button("💾 Lưu lại", key="save_btn", use_container_width=True):
-                st.info("✨ Tin nhắn đã được lưu trong phiên làm việc")
-        
-        st.markdown('</div></div>', unsafe_allow_html=True)
-    
-    # ===== UPGRADE PROMOTION =====
-    if not st.session_state.paid and st.session_state.usage_count >= 3:
-        st.markdown("""
-        <div style="background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: white; border-radius: 24px; padding: 3rem; margin: 3rem 0; text-align: center;">
-            <div style="font-size: 3rem; margin-bottom: 1rem;">💎</div>
-            <h2 style="color: white; margin-bottom: 1rem;">Sắp hết lượt dùng thử?</h2>
-            <p style="color: rgba(255, 255, 255, 0.9); margin-bottom: 2rem; font-size: 1.1rem;">
-                Nâng cấp ngay để tiếp tục sử dụng không giới hạn với 7,000+ tình huống
-            </p>
-            <button onclick="window.location.href='?upgrade=true'" 
-                    style="background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%); 
-                           color: #1e293b; border: none; padding: 1rem 3rem; 
-                           border-radius: 16px; cursor: pointer; font-weight: 600; 
-                           font-size: 1.1rem; margin-top: 1rem;">
-                🔥 Xem ưu đãi nâng cấp
-            </button>
-        </div>
-        """, unsafe_allow_html=True)
+                st.info("✨ Đã lưu tin nhắn")
     
     st.markdown('</div>', unsafe_allow_html=True)  # Close main-content
 
