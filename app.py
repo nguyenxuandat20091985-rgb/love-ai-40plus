@@ -516,6 +516,7 @@ st.markdown("""
     background: white;
     border-radius: 16px;
     border: 1px solid #e2e8f0;
+    white-space: pre-line;
 }
 
 /* ===== ACTION BUTTONS ===== */
@@ -577,7 +578,9 @@ def init_files():
 init_files()
 
 def validate_phone(phone):
-    phone = re.sub(r'\D', '', phone)
+    if not phone:
+        return None
+    phone = re.sub(r'\D', '', str(phone))
     if 9 <= len(phone) <= 11 and phone.startswith('0'):
         return phone
     return None
@@ -587,28 +590,33 @@ def get_usage_count(phone):
         df = pd.read_csv(USAGE_FILE)
         user_data = df[df["phone"] == phone]
         return 0 if user_data.empty else int(user_data.iloc[0]["count"])
-    except:
+    except Exception as e:
+        print(f"Error reading usage: {e}")
         return 0
 
 def update_usage(phone):
     try:
-        df = pd.read_csv(USAGE_FILE)
-    except:
-        df = pd.DataFrame(columns=["phone", "count", "last_used"])
-    
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    
-    if phone in df["phone"].values:
-        df.loc[df["phone"] == phone, "count"] += 1
-        df.loc[df["phone"] == phone, "last_used"] = now
-    else:
-        df = pd.concat([df, pd.DataFrame({
-            "phone": [phone],
-            "count": [1],
-            "last_used": [now]
-        })], ignore_index=True)
-    
-    df.to_csv(USAGE_FILE, index=False)
+        try:
+            df = pd.read_csv(USAGE_FILE)
+        except:
+            df = pd.DataFrame(columns=["phone", "count", "last_used"])
+        
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        if phone in df["phone"].values:
+            df.loc[df["phone"] == phone, "count"] = df.loc[df["phone"] == phone, "count"].astype(int) + 1
+            df.loc[df["phone"] == phone, "last_used"] = now
+        else:
+            new_row = pd.DataFrame({
+                "phone": [phone],
+                "count": [1],
+                "last_used": [now]
+            })
+            df = pd.concat([df, new_row], ignore_index=True)
+        
+        df.to_csv(USAGE_FILE, index=False)
+    except Exception as e:
+        print(f"Error updating usage: {e}")
 
 def load_paid_users():
     try:
@@ -644,6 +652,30 @@ class EmotionalAI:
                 "Nữ→Nam": [
                     "Anh ơi, dạo này anh có khoẻ không? Công việc nhiều quá có mệt không? Nhớ chăm sóc sức khoẻ nhé. 🫂",
                 ]
+            },
+            "An ủi": {
+                "Nam→Nữ": [
+                    "Nghe nói bạn đang có chuyện không vui. Nếu muốn chia sẻ, mình luôn ở đây để lắng nghe. Mọi chuyện rồi sẽ qua thôi. 🌈",
+                ],
+                "Nữ→Nam": [
+                    "Anh ơi, em biết anh đang không vui. Nếu cần ai đó tâm sự, em luôn sẵn sàng. Mọi chuyện rồi sẽ tốt đẹp thôi. 💝",
+                ]
+            },
+            "Tỏ tình": {
+                "Nam→Nữ": [
+                    "Mình đã suy nghĩ rất nhiều và muốn nói rằng, mình thực sự thích bạn. Bạn cho mình cơ hội được không? 💖",
+                ],
+                "Nữ→Nam": [
+                    "Anh à, em muốn nói rằng em rất thích anh. Anh có thể cho em cơ hội được không? 🌹",
+                ]
+            },
+            "Làm hoà": {
+                "Nam→Nữ": [
+                    "Mình xin lỗi về những hiểu lầm vừa qua. Mình trân trọng bạn và mong chúng ta có thể nói chuyện để hiểu nhau hơn. 🤝",
+                ],
+                "Nữ→Nam": [
+                    "Anh ơi, em xin lỗi vì những gì đã xảy ra. Anh có thể tha thứ cho em không? Em rất trân trọng anh. 🙏",
+                ]
             }
         }
     
@@ -659,8 +691,10 @@ class EmotionalAI:
         
         if context:
             detail = context[:50] + "..." if len(context) > 50 else context
-            template = template.replace("{name}", "mình")
             template = template.replace("{detail}", detail)
+        
+        # Thay thế {name} mặc định
+        template = template.replace("{name}", "tôi")
         
         return template
 
@@ -677,6 +711,10 @@ def main():
         st.session_state.usage_count = 0
     if 'result' not in st.session_state:
         st.session_state.result = ""
+    if 'user_gender' not in st.session_state:
+        st.session_state.user_gender = "Nam"
+    if 'target_gender' not in st.session_state:
+        st.session_state.target_gender = "Nữ"
     
     # ===== HERO SECTION =====
     st.markdown("""
@@ -735,7 +773,8 @@ def main():
         # Register button
         if st.button("✨ **NHẬN 5 TIN MIỄN PHÍ**", 
                     type="primary", 
-                    key="register_btn"):
+                    key="register_btn",
+                    use_container_width=True):
             if phone:
                 valid_phone = validate_phone(phone)
                 if valid_phone:
@@ -749,10 +788,10 @@ def main():
                         st.session_state.usage_count = get_usage_count(valid_phone)
                     
                     st.success("✅ **Đăng ký thành công!**")
-                    time.sleep(1.5)
+                    time.sleep(1)
                     st.rerun()
                 else:
-                    st.error("⚠️ Vui lòng nhập số điện thoại hợp lệ")
+                    st.error("⚠️ Vui lòng nhập số điện thoại hợp lệ (10-11 số, bắt đầu bằng 0)")
             else:
                 st.warning("📱 Vui lòng nhập số điện thoại")
         
@@ -798,7 +837,29 @@ def main():
         remaining = FREE_TRIAL_LIMIT - st.session_state.usage_count
         
         if remaining <= 0:
-            st.warning("Bạn đã hết lượt dùng thử!")
+            st.error("⚠️ **Bạn đã hết lượt dùng thử!** Vui lòng nâng cấp để tiếp tục sử dụng.")
+            
+            # Thêm phần thanh toán ở đây nếu cần
+            with st.expander("💳 **Nâng cấp tài khoản**"):
+                st.markdown(f"""
+                **Thông tin chuyển khoản:**
+                - Ngân hàng: {BANK_INFO['bank']}
+                - Số tài khoản: {BANK_INFO['account']}
+                - Chủ tài khoản: {BANK_INFO['name']}
+                - Nội dung: {BANK_INFO['note_format'].replace('[SỐ ĐIỆN THOẠI]', st.session_state.phone)}
+                
+                **Giá: 149.000đ** - Sử dụng trọn đời
+                """)
+                
+                verify_btn = st.button("✅ **Tôi đã chuyển khoản**", use_container_width=True)
+                if verify_btn:
+                    save_paid_user(st.session_state.phone)
+                    st.session_state.paid = True
+                    st.success("🎉 **Nâng cấp thành công!** Cảm ơn bạn đã tin tưởng.")
+                    time.sleep(1)
+                    st.rerun()
+            
+            st.markdown('</div>', unsafe_allow_html=True)  # Close main-content
             return
         
         percentage = (st.session_state.usage_count / FREE_TRIAL_LIMIT) * 100
@@ -826,10 +887,6 @@ def main():
         <p class="creator-subtitle">
             Chia sẻ tình huống của bạn, để AI thấu hiểu và giúp bạn diễn đạt cảm xúc một cách chân thành, phù hợp
         </p>
-        
-        <div class="input-section">
-            <label class="section-label">👥 Chọn giới tính</label>
-            <div class="gender-container">
     """, unsafe_allow_html=True)
     
     # Gender selection
@@ -841,7 +898,7 @@ def main():
             ["Nam", "Nữ"],
             horizontal=True,
             label_visibility="collapsed",
-            key="user_gender"
+            key="user_gender_radio"
         )
     
     with col2:
@@ -851,13 +908,10 @@ def main():
             ["Nam", "Nữ"],
             horizontal=True,
             label_visibility="collapsed",
-            key="target_gender"
+            key="target_gender_radio"
         )
     
-    st.markdown('</div></div>', unsafe_allow_html=True)
-    
     # Situation selection
-    st.markdown('<div class="input-section">', unsafe_allow_html=True)
     st.markdown('<div class="section-label">💭 Chọn tình huống</div>', unsafe_allow_html=True)
     
     situation = st.selectbox(
@@ -867,10 +921,7 @@ def main():
         label_visibility="collapsed"
     )
     
-    st.markdown('</div>', unsafe_allow_html=True)
-    
     # Context input
-    st.markdown('<div class="input-section">', unsafe_allow_html=True)
     st.markdown('<div class="section-label">📝 Thêm chi tiết (tuỳ chọn)</div>', unsafe_allow_html=True)
     
     context = st.text_area(
@@ -880,13 +931,12 @@ def main():
         label_visibility="collapsed"
     )
     
-    st.markdown('</div>', unsafe_allow_html=True)
-    
     # Generate button
     if st.button("✨ **AI TẠO TIN NHẮN TINH TẾ**", 
                 type="primary", 
                 use_container_width=True,
                 key="generate_btn"):
+        
         if not st.session_state.paid:
             st.session_state.usage_count += 1
             update_usage(st.session_state.phone)
@@ -894,7 +944,7 @@ def main():
             
             if remaining < 0:
                 st.error("Bạn đã hết lượt dùng thử!")
-                return
+                st.rerun()
         
         # Generate message
         ai = EmotionalAI()
@@ -918,14 +968,14 @@ def main():
         col1, col2, col3 = st.columns(3)
         with col1:
             if st.button("📋 Copy", key="copy_btn", use_container_width=True):
-                st.success("✅ Đã copy!")
+                st.success("✅ Đã copy vào clipboard!")
         with col2:
             if st.button("🔄 Tạo mới", key="new_btn", use_container_width=True):
                 st.session_state.result = ""
                 st.rerun()
         with col3:
             if st.button("💾 Lưu lại", key="save_btn", use_container_width=True):
-                st.info("✨ Đã lưu tin nhắn")
+                st.info("✨ (Tính năng đang phát triển) Tin nhắn sẽ được lưu vào lịch sử")
     
     st.markdown('</div>', unsafe_allow_html=True)  # Close main-content
 
