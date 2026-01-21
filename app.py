@@ -15,7 +15,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# ==================== CSS HIỆN ĐẠI - LOAD TRƯỚC ====================
+# ==================== CSS HIỆN ĐẠI ====================
 st.markdown("""
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -53,8 +53,7 @@ st.markdown("""
     left: 0;
     right: 0;
     bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" opacity="0.1"><circle cx="50" cy="50" r="40" fill="none" stroke="white" stroke-width="0.5"/></svg>');
-    background-size: 300px;
+    background: rgba(255, 255, 255, 0.05);
     animation: float 20s linear infinite;
 }
 
@@ -643,6 +642,12 @@ class EmotionalAI:
                 "Nữ→Nam": [
                     "Chào anh, em là {name} đây. Anh có vài phút trò chuyện không? Em muốn làm quen. 🌸",
                     "Xin chào, em muốn làm quen nếu anh không ngại. Anh đang bận gì không? 🤗",
+                ],
+                "Nam→Nam": [
+                    "Chào bạn, mình là {name}. Mình thấy chúng ta có chung {detail}, muốn làm quen nếu bạn không ngại. Cà phê cuối tuần nhé? ☕",
+                ],
+                "Nữ→Nữ": [
+                    "Chào bạn, mình là {name} đây. Mình muốn làm quen vì thấy chúng ta có chung {detail}. Bạn rảnh trò chuyện không? 🌸",
                 ]
             },
             "Hỏi thăm": {
@@ -651,6 +656,12 @@ class EmotionalAI:
                 ],
                 "Nữ→Nam": [
                     "Anh ơi, dạo này anh có khoẻ không? Công việc nhiều quá có mệt không? Nhớ chăm sóc sức khoẻ nhé. 🫂",
+                ],
+                "Nam→Nam": [
+                    "Bạn ơi, dạo này thế nào rồi? Công việc ổn không? Có gì cần giúp đỡ cứ nói nhé. 💪",
+                ],
+                "Nữ→Nữ": [
+                    "Bạn ơi, dạo này sao rồi? Công việc có ổn không? Nhớ giữ gìn sức khoẻ nha. 💖",
                 ]
             },
             "An ủi": {
@@ -659,6 +670,12 @@ class EmotionalAI:
                 ],
                 "Nữ→Nam": [
                     "Anh ơi, em biết anh đang không vui. Nếu cần ai đó tâm sự, em luôn sẵn sàng. Mọi chuyện rồi sẽ tốt đẹp thôi. 💝",
+                ],
+                "Nam→Nam": [
+                    "Nghe nói bạn đang gặp chuyện không vui. Nếu cần tâm sự, mình luôn sẵn sàng. Mọi chuyện rồi cũng sẽ ổn thôi. 🤝",
+                ],
+                "Nữ→Nữ": [
+                    "Mình nghe nói bạn đang không vui. Nếu cần chia sẻ, mình luôn ở đây lắng nghe. Rồi mọi chuyện sẽ tốt đẹp thôi. 💕",
                 ]
             },
             "Tỏ tình": {
@@ -667,6 +684,12 @@ class EmotionalAI:
                 ],
                 "Nữ→Nam": [
                     "Anh à, em muốn nói rằng em rất thích anh. Anh có thể cho em cơ hội được không? 🌹",
+                ],
+                "Nam→Nam": [
+                    "Mình muốn nói rằng mình rất quý bạn. Không biết bạn có thể cho mình cơ hội được không? 🌈",
+                ],
+                "Nữ→Nữ": [
+                    "Mình muốn nói rằng mình rất thích bạn. Bạn có thể cho mình cơ hội được không? 💝",
                 ]
             },
             "Làm hoà": {
@@ -675,6 +698,12 @@ class EmotionalAI:
                 ],
                 "Nữ→Nam": [
                     "Anh ơi, em xin lỗi vì những gì đã xảy ra. Anh có thể tha thứ cho em không? Em rất trân trọng anh. 🙏",
+                ],
+                "Nam→Nam": [
+                    "Mình xin lỗi về chuyện vừa rồi. Mình trân trọng tình bạn này và mong chúng ta có thể làm lành. ✌️",
+                ],
+                "Nữ→Nữ": [
+                    "Mình xin lỗi về mọi chuyện. Mình rất trân trọng bạn và mong chúng ta có thể làm lành. 💞",
                 ]
             }
         }
@@ -839,7 +868,7 @@ def main():
         if remaining <= 0:
             st.error("⚠️ **Bạn đã hết lượt dùng thử!** Vui lòng nâng cấp để tiếp tục sử dụng.")
             
-            # Thêm phần thanh toán ở đây nếu cần
+            # Thêm phần thanh toán
             with st.expander("💳 **Nâng cấp tài khoản**"):
                 st.markdown(f"""
                 **Thông tin chuyển khoản:**
