@@ -2,14 +2,14 @@ import streamlit as st
 import pandas as pd
 import json
 import time
-import os
-from datetime import datetime
+import random
 import re
+from datetime import datetime
 from pathlib import Path
 
 # ==================== CONFIGURATION ====================
 st.set_page_config(
-    page_title="EMOTICONN AI - Giao Tiếp Cảm Xúc Thông Minh",
+    page_title="EMOTICONN AI - Trợ Lý Giao Tiếp Cảm Xúc",
     page_icon="💬",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -17,252 +17,530 @@ st.set_page_config(
 
 # ==================== CONSTANTS ====================
 FREE_TRIAL_LIMIT = 3
-BANK_ACCOUNT = {
+BANK_INFO = {
     "bank": "BIDV",
-    "account_number": "4430269669",
-    "account_name": "NGUYEN XUAN DAT",
-    "note_format": "AI + [SỐ ĐIỆN THOẠI]"
+    "account": "4430269669",
+    "name": "NGUYEN XUAN DAT"
 }
 
-# ==================== FILE PATHS ====================
+# ==================== DATA PATHS ====================
 DATA_DIR = Path("data")
 DATA_DIR.mkdir(exist_ok=True)
-USAGE_FILE = DATA_DIR / "usage_log.csv"
-PAID_FILE = DATA_DIR / "paid_users.json"
+USAGE_FILE = DATA_DIR / "usage.csv"
+PAID_FILE = DATA_DIR / "paid.json"
 
-# ==================== INITIALIZE FILES ====================
+# ==================== INITIALIZE ====================
 def init_files():
     if not USAGE_FILE.exists():
-        pd.DataFrame(columns=["phone", "timestamp", "used_count"]).to_csv(USAGE_FILE, index=False)
-    
+        pd.DataFrame(columns=["phone", "count", "last_used"]).to_csv(USAGE_FILE, index=False)
     if not PAID_FILE.exists():
         with open(PAID_FILE, "w") as f:
             json.dump({}, f)
 
 init_files()
 
-# ==================== CSS STYLING ====================
-def load_css():
+# ==================== PREMIUM CSS ====================
+def load_premium_css():
     st.markdown("""
     <style>
-    /* Main Theme */
+    /* === ROOT VARIABLES === */
     :root {
-        --primary: #2C3E50;
-        --secondary: #F8F9FA;
-        --accent: #1ABC9C;
-        --text: #333333;
+        --primary-dark: #6A11CB;
+        --primary-light: #2575FC;
+        --secondary: #8A2BE2;
+        --accent: #FF6B9D;
+        --neutral-light: #F8F9FF;
+        --neutral-dark: #2D3748;
+        --success: #10B981;
+        --warning: #F59E0B;
+        --text-primary: #2D3748;
+        --text-secondary: #718096;
+        --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        --radius-md: 16px;
+        --radius-lg: 24px;
     }
     
-    /* Global Styles */
+    /* === GLOBAL RESET === */
     .stApp {
-        background: linear-gradient(135deg, #F8F9FA 0%, #E9ECEF 100%);
+        background: linear-gradient(135deg, #F8F9FF 0%, #EDF2F7 100%);
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     }
     
-    /* Hero Section */
-    .hero-container {
-        background: linear-gradient(90deg, var(--primary) 0%, #34495E 100%);
-        padding: 3rem 2rem;
-        border-radius: 20px;
+    /* === HERO SECTION === */
+    .hero-gradient {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-light) 100%);
+        padding: 3rem 1rem;
+        border-radius: 0 0 var(--radius-lg) var(--radius-lg);
         margin-bottom: 2rem;
-        color: white;
-        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .hero-gradient::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="white" opacity="0.1"/></svg>');
+        animation: float 20s linear infinite;
+    }
+    
+    @keyframes float {
+        0% { transform: translateY(0px); }
+        100% { transform: translateY(-100px); }
     }
     
     .hero-title {
         font-size: 2.8rem !important;
         font-weight: 800 !important;
-        margin-bottom: 1rem !important;
-        background: linear-gradient(90deg, #FFFFFF 0%, #1ABC9C 100%);
+        background: linear-gradient(90deg, #FFFFFF 0%, #FFD6FF 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
+        text-align: center;
+        margin-bottom: 1rem !important;
+        line-height: 1.2;
+    }
+    
+    @media (max-width: 768px) {
+        .hero-title {
+            font-size: 2.2rem !important;
+        }
     }
     
     .hero-subtitle {
         font-size: 1.3rem !important;
-        opacity: 0.9;
-        margin-bottom: 1.5rem !important;
+        color: rgba(255, 255, 255, 0.9) !important;
+        text-align: center;
+        max-width: 800px;
+        margin: 0 auto 2rem auto !important;
+        line-height: 1.6;
     }
     
-    /* Cards */
-    .custom-card {
+    /* === PREMIUM CARD === */
+    .premium-card {
         background: white;
-        padding: 1.5rem;
-        border-radius: 15px;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.08);
-        margin: 1rem 0;
-        border: 1px solid #E9ECEF;
+        border-radius: var(--radius-md);
+        padding: 2rem;
+        box-shadow: var(--shadow-md);
+        border: 1px solid #E2E8F0;
+        margin-bottom: 1.5rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
     
-    /* Buttons */
+    .premium-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    /* === INPUT STYLING === */
+    .stTextInput > div > div > input {
+        border-radius: 12px !important;
+        border: 2px solid #E2E8F0 !important;
+        padding: 1rem !important;
+        font-size: 1.1rem !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .stTextInput > div > div > input:focus {
+        border-color: var(--primary-light) !important;
+        box-shadow: 0 0 0 3px rgba(37, 117, 252, 0.1) !important;
+    }
+    
+    .stTextArea > div > div > textarea {
+        border-radius: 12px !important;
+        border: 2px solid #E2E8F0 !important;
+        padding: 1rem !important;
+        font-size: 1rem !important;
+        min-height: 120px;
+    }
+    
+    /* === BUTTON STYLING === */
     .stButton > button {
-        background: linear-gradient(90deg, var(--accent) 0%, #16A085 100%);
-        color: white;
-        border: none;
-        padding: 10px 24px;
-        border-radius: 50px;
-        font-weight: 600;
-        transition: all 0.3s ease;
+        border-radius: 50px !important;
+        padding: 0.9rem 2rem !important;
+        font-weight: 600 !important;
+        font-size: 1rem !important;
+        transition: all 0.3s ease !important;
+        border: none !important;
         width: 100%;
     }
     
-    .stButton > button:hover {
+    .primary-btn {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-light) 100%) !important;
+        color: white !important;
+    }
+    
+    .primary-btn:hover {
         transform: translateY(-2px);
-        box-shadow: 0 7px 20px rgba(26, 188, 156, 0.3);
+        box-shadow: 0 10px 20px rgba(106, 17, 203, 0.2) !important;
     }
     
-    /* Input Fields */
-    .stTextArea > div > div > textarea {
-        border-radius: 12px !important;
-        border: 2px solid #E9ECEF !important;
-        padding: 0.8rem !important;
-        font-size: 16px !important;
+    .secondary-btn {
+        background: white !important;
+        color: var(--primary-dark) !important;
+        border: 2px solid var(--primary-light) !important;
     }
     
-    .stTextArea > div > div > textarea:focus {
-        border-color: var(--accent) !important;
-        box-shadow: 0 0 0 1px var(--accent) !important;
+    .secondary-btn:hover {
+        background: var(--primary-light) !important;
+        color: white !important;
     }
     
-    /* Radio Buttons */
+    /* === RADIO & SELECT STYLING === */
     .stRadio > div {
         flex-direction: row;
         gap: 1rem;
+        flex-wrap: wrap;
     }
     
     .stRadio > div > label {
         background: white;
+        border: 2px solid #E2E8F0;
+        border-radius: 12px;
         padding: 0.8rem 1.5rem;
-        border-radius: 10px;
-        border: 2px solid #E9ECEF;
         transition: all 0.3s ease;
-    }
-    
-    .stRadio > div > label:hover {
-        border-color: var(--accent);
-        transform: translateY(-2px);
-    }
-    
-    /* Progress Bar */
-    .stProgress > div > div > div {
-        background-color: var(--accent);
-    }
-    
-    /* Hide Streamlit Default Elements */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
-    
-    /* Payment Section */
-    .payment-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 2rem;
-        border-radius: 20px;
+        flex: 1;
+        min-width: 120px;
         text-align: center;
     }
     
-    /* Result Card */
-    .result-card {
-        background: #FFF9F0;
-        border-left: 5px solid var(--accent);
-        padding: 1.5rem;
+    .stRadio > div > label:hover {
+        border-color: var(--primary-light);
+        transform: translateY(-2px);
+    }
+    
+    .stRadio > div > label[data-testid="stRadio"] {
+        margin-right: 0 !important;
+    }
+    
+    /* === PROGRESS BAR === */
+    .stProgress > div > div > div {
+        background: linear-gradient(90deg, var(--primary-dark), var(--primary-light));
         border-radius: 10px;
-        margin: 1.5rem 0;
-        font-size: 1.1rem;
-        line-height: 1.6;
     }
     
-    /* Phone Input */
-    .phone-input {
-        font-size: 1.2rem !important;
-        padding: 12px !important;
-        text-align: center !important;
-    }
-    
-    /* Success Message */
-    .success-box {
-        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-        border: 2px solid #28a745;
+    /* === RESULT CARD === */
+    .result-card {
+        background: linear-gradient(135deg, #FFF9FB 0%, #F0F4FF 100%);
+        border-left: 5px solid var(--accent);
         border-radius: 12px;
-        padding: 1.5rem;
+        padding: 2rem;
+        margin: 2rem 0;
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .message-content {
+        font-size: 1.2rem;
+        line-height: 1.8;
+        color: var(--text-primary);
+        margin-bottom: 1.5rem;
+    }
+    
+    /* === PAYMENT SECTION === */
+    .payment-card {
+        background: linear-gradient(135deg, #1E293B 0%, #334155 100%);
+        color: white;
+        border-radius: var(--radius-md);
+        padding: 2.5rem;
+        text-align: center;
+    }
+    
+    .price-tag {
+        font-size: 3.5rem;
+        font-weight: 800;
+        background: linear-gradient(90deg, #FFD700, #FFA500);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
         margin: 1rem 0;
     }
     
-    /* Warning Message */
-    .warning-box {
-        background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
-        border: 2px solid #ffc107;
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin: 1rem 0;
+    /* === FOOTER === */
+    .footer {
+        text-align: center;
+        padding: 2rem 1rem;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        border-top: 1px solid #E2E8F0;
+        margin-top: 3rem;
+    }
+    
+    /* === UTILITY CLASSES === */
+    .text-center { text-align: center !important; }
+    .mb-1 { margin-bottom: 0.5rem !important; }
+    .mb-2 { margin-bottom: 1rem !important; }
+    .mb-3 { margin-bottom: 1.5rem !important; }
+    .mt-2 { margin-top: 1rem !important; }
+    .mt-3 { margin-top: 1.5rem !important; }
+    
+    /* === HIDE DEFAULTS === */
+    #MainMenu, footer, header { visibility: hidden; }
+    
+    /* === MOBILE OPTIMIZATION === */
+    @media (max-width: 768px) {
+        .premium-card { padding: 1.5rem; }
+        .hero-gradient { padding: 2rem 1rem; }
+        .stRadio > div { flex-direction: column; }
+        .stRadio > div > label { width: 100%; }
     }
     </style>
     """, unsafe_allow_html=True)
 
-load_css()
+load_premium_css()
 
-# ==================== VALIDATION FUNCTIONS ====================
-def validate_phone_number(phone):
-    """Simple Vietnamese phone number validation"""
-    # Remove all non-digit characters
+# ==================== AI TEMPLATE DATABASE ====================
+class EmotionalAI:
+    def __init__(self):
+        self.templates = {
+            "Làm quen": {
+                "Nam nhắn Nữ": [
+                    "Chào bạn, mình là {name} từ {context}. Mình ấn tượng với {detail} và muốn làm quen nếu không phiền. Hôm nay của bạn thế nào? 💫",
+                    "Xin chào, hy vọng tin nhắn này không đến bất ngờ. Mình thấy chúng ta có chung {interest}. Bạn có muốn trao đổi thêm không? ☕",
+                    "Chào bạn, mình vừa nhớ đến cuộc trò chuyện hôm {time}. Bạn có khoẻ không? Công việc tuần này thế nào rồi? 💼"
+                ],
+                "Nữ nhắn Nam": [
+                    "Chào anh, em là {name} đây. Em muốn gửi lời cảm ơn vì {reason} hôm trước. Anh có vài phút rảnh trò chuyện không? 🌸",
+                    "Xin chào, em thấy anh rất {trait} trong {context}. Em muốn làm quen nếu anh không ngại. Anh đang bận việc gì không? 🤗",
+                    "Chào anh, hy vọng anh có một ngày tốt lành. Em có chút thắc mắc về {topic}, không biết có thể hỏi ý kiến anh được không? 💭"
+                ]
+            },
+            
+            "Trả lời khi đối phương lạnh": {
+                "Nam nhắn Nữ": [
+                    "Mình hiểu bạn đang bận hoặc có việc riêng. Khi nào rảnh, mình vẫn ở đây. Chúc bạn một ngày nhẹ nhàng. 🌿",
+                    "Có vẻ hôm nay không phải thời điểm thích hợp. Mình tôn trọng không gian riêng của bạn. Nếu có dịp khác, chúng ta nói chuyện sau. 🤝",
+                    "Không sao cả, mỗi người đều có những ngày cần yên tĩnh. Mình gửi bạn chút năng lượng tích cực nhé. ✨"
+                ],
+                "Nữ nhắn Nam": [
+                    "Em hiểu anh đang tập trung vào việc quan trọng. Khi nào anh thoải mái, em vẫn sẵn sàng trò chuyện. Chúc anh làm việc hiệu quả. 💪",
+                    "Có lẽ hôm nay chưa phải lúc. Em tôn trọng thời gian của anh. Một ngày tốt lành nhé. 🌞",
+                    "Không vấn đề gì đâu. Ai cũng có những lúc cần không gian riêng. Em chúc anh bình an. 🕊️"
+                ]
+            },
+            
+            "Gợi chuyện không vô duyên": {
+                "Nam nhắn Nữ": [
+                    "Mình vừa xem/đọc/nghe {something}, tự nhiên nghĩ đến bạn. Bạn có quan tâm đến {topic} không? 🎵",
+                    "Hôm nay thời tiết {weather}, mình nhớ đến lần chúng ta nói về {memory}. Dạo này bạn có gì mới không? 🌤️",
+                    "Mình tình cờ thấy {thing} này, thấy hợp với sở thích của bạn. Đơn giản chỉ muốn chia sẻ thôi. 💝"
+                ],
+                "Nữ nhắn Nam": [
+                    "Em vừa trải nghiệm {experience}, chợt nhớ anh từng chia sẻ về {topic}. Anh dạo này thế nào? 🍃",
+                    "Hôm nay em có chuyện vui muốn khoe, là {news}. Anh có muốn nghe không? 😊",
+                    "Em thấy {thing} này hay hay, nghĩ ngay đến anh. Không biết anh có hứng thú không? 🎁"
+                ]
+            },
+            
+            "Đã ly hôn (trưởng thành)": {
+                "Nam nhắn Nữ": [
+                    "Tôi hiểu hành trình này không dễ dàng. Những gì chúng ta trải qua đều giúp trưởng thành hơn. Hôm nay bạn cảm thấy thế nào? 🌱",
+                    "Bắt đầu lại ở độ tuổi này thực sự là một thử thách. Nhưng tôi tin mỗi người đều xứng đáng có cơ hội mới. Bạn có muốn chia sẻ điều gì không? 🤲",
+                    "Quá khứ là bài học, hiện tại là món quà. Dù có chuyện gì xảy ra, bạn vẫn là người giá trị. Có điều gì tôi có thể lắng nghe không? 💫"
+                ],
+                "Nữ nhắn Nam": [
+                    "Em biết bắt đầu lại không đơn giản. Nhưng chính những trải nghiệm làm chúng ta sâu sắc hơn. Anh đang ổn chứ? 🌻",
+                    "Ở độ tuổi chúng ta, mỗi người đều mang theo câu chuyện riêng. Em trân trọng điều đó. Anh có muốn tâm sự không? 🍂",
+                    "Em tin rằng mọi thứ xảy ra đều có lý do. Quan trọng là chúng ta đối diện với hiện tại. Anh cảm thấy thế nào về điều đó? 💭"
+                ]
+            },
+            
+            "Có con riêng": {
+                "Nam nhắn Nữ": [
+                    "Tôi rất trân trọng việc bạn vừa là một người mẹ tốt vừa mở lòng cho những mối quan hệ mới. Các bé khoẻ không? 👨‍👧",
+                    "Làm cha mẹ đơn thân không dễ dàng. Tôi ngưỡng mộ sự mạnh mẽ của bạn. Cuối tuần này bạn có kế hoạch gì cùng các con không? 🎈",
+                    "Tôi hiểu gia đình luôn là ưu tiên hàng đầu của bạn. Đó là điều đáng quý. Nếu có dịp, tôi muốn nghe bạn chia sẻ về cuộc sống hàng ngày. 🏡"
+                ],
+                "Nữ nhắn Nam": [
+                    "Em biết việc vừa làm cha vừa tìm kiếm hạnh phúc riêng không đơn giản. Em ngưỡng mộ sự cân bằng của anh. Các con anh dạo này thế nào? 👨‍👦",
+                    "Làm bố đơn thân chắc hẳn có nhiều thử thách. Em thấy anh đang làm rất tốt. Có điều gì anh muốn chia sẻ về hành trình này không? 🌟",
+                    "Em trân trọng cách anh ưu tiên cho con cái. Đó là phẩm chất đáng quý. Nếu anh có thời gian, em muốn hiểu thêm về cuộc sống của anh. 💞"
+                ]
+            },
+            
+            "Ghen nhẹ đúng mực": {
+                "Nam nhắn Nữ": [
+                    "Anh thấy có chút bồn chồn khi nghĩ đến việc em đi chơi với đồng nghiệp đó. Nhưng anh tin tưởng em. Chỉ là anh quan tâm thôi. 😔",
+                    "Anh biết mình hơi trẻ con, nhưng thấy em thân thiết với ai đó, anh cảm thấy có chút lo lắng. Có thể nói chuyện với anh về người đó được không? 💬",
+                    "Anh không muốn kiểm soát em, chỉ là anh quan tâm. Khi thấy em vui vẻ với người khác, anh tự hỏi mình có làm em hạnh phúc như vậy không. 🤔"
+                ],
+                "Nữ nhắn Nam": [
+                    "Em thú thật là có chút không thoải mái khi thấy anh đi cafe với cô ấy. Nhưng em tin anh. Chỉ là cảm xúc tự nhiên thôi. 🫣",
+                    "Em không muốn ghen tuông vô lý, nhưng khi thấy anh thân thiết với ai đó, em cảm thấy không an toàn. Anh có thể giúp em hiểu rõ hơn không? 🥺",
+                    "Em biết mình không nên, nhưng cảm thấy có chút tổn thương khi thấy anh quan tâm đến người khác. Em cần được trấn an một chút. 🤗"
+                ]
+            },
+            
+            "Áp lực tài chính": {
+                "Nam nhắn Nữ": [
+                    "Tôi hiểu áp lực tài chính ở độ tuổi chúng ta không nhẹ. Nhưng xin đừng quá khắt khe với bản thân. Mọi thứ rồi sẽ ổn thôi. 💪",
+                    "Gánh nặng cơm áo gạo tiền đôi khi làm ta mệt mỏi. Hãy nhớ chăm sóc bản thân mình trước nhé. Có điều gì tôi có thể hỗ trợ không? 🤲",
+                    "Ai rồi cũng có những giai đoạn khó khăn về tiền bạc. Điều quan trọng là chúng ta không đơn độc. Bạn đang cần lời khuyên hay chỉ cần người lắng nghe? 👂"
+                ],
+                "Nữ nhắn Nam": [
+                    "Em biết áp lực tài chính có thể rất nặng nề. Nhưng anh đừng quên rằng sức khoẻ và tinh thần mới là quan trọng nhất. Em lo cho anh. 🫂",
+                    "Mọi khó khăn rồi cũng sẽ qua. Quan trọng là chúng ta cùng nhau vượt qua. Anh có muốn chia sẻ gánh nặng với em không? 💞",
+                    "Đừng ôm hết mọi thứ một mình. Em ở đây để lắng nghe và ủng hộ anh. Tiền bạc có thể kiếm lại, nhưng sức khoẻ và sự bình yên thì không. 🌈"
+                ]
+            },
+            
+            "Nhắn buổi sáng": {
+                "Nam nhắn Nữ": [
+                    "Chào buổi sáng em yêu. Hy vọng em có một đêm ngon giấc. Hôm nay trời đẹp, anh chúc em một ngày tràn đầy năng lượng và niềm vui. ☀️",
+                    "Sáng nay thức dậy, điều đầu tiên anh nghĩ đến là em. Chúc em một ngày mới nhẹ nhàng và hạnh phúc. Nhớ ăn sáng đầy đủ nhé. 🍳",
+                    "Buổi sáng bình an em nhé. Dù hôm nay có bận rộn thế nào, hãy nhớ chăm sóc bản thân. Anh luôn ở đây nếu em cần. 🌸"
+                ],
+                "Nữ nhắn Nam": [
+                    "Chào buổi sáng anh yêu. Em chúc anh một ngày làm việc hiệu quả và tràn đầy cảm hứng. Nhớ uống đủ nước và ăn sáng nhé. 💧",
+                    "Sáng nay em thức dậy và mỉm cười vì nghĩ đến anh. Chúc anh một ngày thật ý nghĩa. Dù có chuyện gì, hãy nhớ em luôn ủng hộ anh. 😊",
+                    "Buổi sáng an lành anh nhé. Hy vọng anh có một ngày nhẹ nhàng. Nếu mệt, hãy dành thời gian nghỉ ngơi. Sức khoẻ quan trọng nhất. 💖"
+                ]
+            },
+            
+            "Khi giận nhau": {
+                "Nam nhắn Nữ": [
+                    "Anh xin lỗi vì những gì đã xảy ra. Dù có bất đồng, tình cảm của anh dành cho em không thay đổi. Anh muốn chúng ta cùng tìm cách giải quyết. 🕊️",
+                    "Anh biết mình đã làm em buồn. Anh không muốn vì hiểu lầm mà làm tổn thương tình cảm của chúng ta. Em có thể cho anh cơ hội được nói chuyện không? 🙏",
+                    "Dù có chuyện gì xảy ra, anh vẫn yêu em. Chúng ta hãy cùng nhau vượt qua khúc mắc này. Anh sẵn sàng lắng nghe và thay đổi. 💞"
+                ],
+                "Nữ nhắn Nam": [
+                    "Em xin lỗi vì đã để cảm xúc chi phối. Em không muốn chúng ta xa cách vì hiểu lầm. Anh có thể cho em cơ hội được giải thích không? 🌹",
+                    "Em biết mình đã sai. Tình cảm của chúng ta quan trọng hơn bất kỳ tranh cãi nào. Em muốn chúng ta cùng tìm cách hoà giải. 🤝",
+                    "Dù có bất đồng, em vẫn trân trọng anh. Em không muốn mất anh vì những chuyện không đáng. Chúng ta có thể nói chuyện được không? 💬"
+                ]
+            },
+            
+            "Ngại yêu lại": {
+                "Nam nhắn Nữ": [
+                    "Tôi hiểu cảm giác ngại ngần khi bắt đầu lại. Những vết thương cũ đôi khi làm ta sợ mở lòng. Nhưng tôi tin mỗi người đều xứng đáng có cơ hội mới. 🌱",
+                    "Bắt đầu ở độ tuổi này có thể đáng sợ, nhưng cũng đẹp vì chúng ta đã biết mình muốn gì. Không cần vội, cứ từ từ thấu hiểu nhau. 🐢",
+                    "Tôi không muốn thêm áp lực. Chúng ta có thể làm bạn trước, xem mọi thứ phát triển tự nhiên. Quan trọng là cả hai cảm thấy an toàn. 🏠"
+                ],
+                "Nữ nhắn Nam": [
+                    "Em hiểu việc mở lòng lại không dễ. Nhưng em tin rằng mỗi người đều có cơ hội viết tiếp câu chuyện của mình. Anh có muốn thử không? ✍️",
+                    "Chúng ta không cần phải vội. Cứ từ từ làm quen, như hai người bạn. Quan trọng là cảm thấy thoải mái khi ở bên nhau. ☕",
+                    "Em tôn trọng nỗi sợ của anh. Không có áp lực, không có kỳ vọng. Chỉ đơn giản là trò chuyện và thấu hiểu nhau. 🍃"
+                ]
+            }
+        }
+        
+        # Situation mapping for user selection
+        self.situation_map = {
+            "💌 Làm quen lần đầu": "Làm quen",
+            "🤔 Đối phương lạnh nhạt": "Trả lời khi đối phương lạnh",
+            "💬 Gợi chuyện tinh tế": "Gợi chuyện không vô duyên",
+            "💔 Đã ly hôn": "Đã ly hôn (trưởng thành)",
+            "👨‍👩‍👧 Có con riêng": "Có con riêng",
+            "😠 Ghen nhẹ đúng mực": "Ghen nhẹ đúng mực",
+            "💰 Áp lực tài chính": "Áp lực tài chính",
+            "☀️ Nhắn buổi sáng": "Nhắn buổi sáng",
+            "⚡ Khi giận nhau": "Khi giận nhau",
+            "🌱 Ngại yêu lại": "Ngại yêu lại"
+        }
+    
+    def generate(self, user_gender, target_gender, situation_key, user_context=""):
+        """Generate emotional message"""
+        # Map situation key
+        situation = self.situation_map.get(situation_key, "Làm quen")
+        
+        # Determine template gender key
+        if user_gender == "Nam" and target_gender == "Nữ":
+            gender_key = "Nam nhắn Nữ"
+        elif user_gender == "Nữ" and target_gender == "Nam":
+            gender_key = "Nữ nhắn Nam"
+        elif user_gender == "Nam" and target_gender == "Nam":
+            gender_key = "Nam nhắn Nữ"  # Fallback
+        elif user_gender == "Nữ" and target_gender == "Nữ":
+            gender_key = "Nữ nhắn Nam"  # Fallback
+        else:
+            gender_key = "Nam nhắn Nữ"  # Default
+        
+        # Get templates
+        if situation in self.templates and gender_key in self.templates[situation]:
+            templates = self.templates[situation][gender_key]
+        else:
+            templates = ["Xin chào, hy vọng bạn có một ngày tốt lành. 💬"]
+        
+        # Select random template
+        template = random.choice(templates)
+        
+        # Personalize with context
+        personalized = self._personalize_template(template, user_context)
+        
+        return personalized
+    
+    def _personalize_template(self, template, context):
+        """Personalize template with user context"""
+        if not context.strip():
+            return template
+        
+        # Simple context insertion
+        replacements = {
+            "{name}": "mình",
+            "{context}": context[:30] + "..." if len(context) > 30 else context,
+            "{detail}": "chia sẻ của bạn",
+            "{interest}": "quan điểm",
+            "{time}": "trước",
+            "{reason}": "sự giúp đỡ",
+            "{trait}": "tử tế",
+            "{topic}": "điều này",
+            "{something}": "một bộ phim",
+            "{weather}": "đẹp",
+            "{memory}": "chuyến đi",
+            "{thing}": "món này",
+            "{experience}": "một điều thú vị",
+            "{news}": "tin vui nhỏ"
+        }
+        
+        result = template
+        for key, value in replacements.items():
+            result = result.replace(key, value)
+        
+        return result
+
+# ==================== DATA MANAGEMENT ====================
+def validate_phone(phone):
+    """Simple phone validation"""
     phone = re.sub(r'\D', '', phone)
-    
-    # Check length
-    if len(phone) < 9 or len(phone) > 11:
-        return None
-    
-    # Check if starts with common Vietnamese prefixes
-    prefixes = ['84', '0']
-    for prefix in prefixes:
-        if phone.startswith(prefix):
-            # Standardize to 0XXXXXXXXX format
-            if phone.startswith('84'):
-                phone = '0' + phone[2:]
-            return phone
-    
-    # If starts with 0, it's already in correct format
-    if phone.startswith('0'):
+    if 9 <= len(phone) <= 11 and phone.startswith('0'):
         return phone
-    
     return None
 
-def get_user_usage(phone):
-    """Get usage count for a phone number"""
+def get_usage_count(phone):
+    """Get usage count for phone"""
     try:
         df = pd.read_csv(USAGE_FILE)
         user_data = df[df["phone"] == phone]
-        
-        if user_data.empty:
-            return 0
-        else:
-            return int(user_data.iloc[-1]["used_count"])
+        return 0 if user_data.empty else int(user_data.iloc[0]["count"])
     except:
         return 0
 
 def update_usage(phone):
-    """Update usage count for a phone number"""
+    """Update usage count"""
     try:
         df = pd.read_csv(USAGE_FILE)
     except:
-        df = pd.DataFrame(columns=["phone", "timestamp", "used_count"])
+        df = pd.DataFrame(columns=["phone", "count", "last_used"])
     
-    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
     if phone in df["phone"].values:
-        df.loc[df["phone"] == phone, "used_count"] += 1
-        df.loc[df["phone"] == phone, "timestamp"] = current_time
+        df.loc[df["phone"] == phone, "count"] += 1
+        df.loc[df["phone"] == phone, "last_used"] = now
     else:
         new_row = pd.DataFrame({
             "phone": [phone],
-            "timestamp": [current_time],
-            "used_count": [1]
+            "count": [1],
+            "last_used": [now]
         })
         df = pd.concat([df, new_row], ignore_index=True)
     
     df.to_csv(USAGE_FILE, index=False)
 
 def load_paid_users():
-    """Load paid users from JSON file"""
+    """Load paid users"""
     try:
         with open(PAID_FILE, "r") as f:
             return json.load(f)
@@ -270,110 +548,11 @@ def load_paid_users():
         return {}
 
 def save_paid_user(phone):
-    """Save paid user to JSON file"""
+    """Save paid user"""
     paid_users = load_paid_users()
     paid_users[phone] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with open(PAID_FILE, "w") as f:
         json.dump(paid_users, f, indent=2)
-
-# ==================== AI MESSAGE GENERATOR ====================
-class MessageGenerator:
-    def __init__(self):
-        self.templates = {
-            "Mới quen": {
-                "Nam": [
-                    "Chào bạn, rất vui được làm quen. Mình thấy {context} rất thú vị, có thể chia sẻ thêm về điều này không? 💬",
-                    "Xin chào, hy vọng bạn có một ngày tốt lành. Mình muốn hỏi về {context} nếu không phiền. ☕",
-                    "Chào bạn, mình vừa nghĩ đến bạn và muốn gửi lời chào. Công việc/dự án {context} của bạn thế nào rồi? 💼"
-                ],
-                "Nữ": [
-                    "Chào bạn, thật tuyệt khi được kết nối. Mình rất ấn tượng với {context}, bạn có thể kể thêm không? ✨",
-                    "Xin chào, chúc bạn một ngày tràn đầy năng lượng. Mình tình cờ thấy {context} và nghĩ ngay đến bạn. 🌟",
-                    "Chào bạn, hy vọng tin nhắn này không làm phiền bạn. Mình muốn hỏi về {context} một chút. 💭"
-                ]
-            },
-            "Đang tìm hiểu": {
-                "Nam": [
-                    "Em ơi, anh vừa đi ngang qua quán cafe chúng mình hôm trước, nhớ em nhiều lắm. {context} ❤️",
-                    "Chúc em ngủ ngon nhé. Hy vọng em có những giấc mơ đẹp. {context} 🌙",
-                    "Anh vừa thấy món này nghĩ ngay đến em. {context} Em có muốn thử cùng anh không? 🍰"
-                ],
-                "Nữ": [
-                    "Anh ơi, em vừa nấu món mới, nhớ đến anh liền. {context} 🍲",
-                    "Chúc anh một ngày làm việc hiệu quả nhé. {context} 💪",
-                    "Em đang nghe bài hát này, thấy hợp với tâm trạng của mình hôm nay. {context} 🎵"
-                ]
-            },
-            "Yêu lâu năm": {
-                "Nam": [
-                    "Cảm ơn em vì tất cả. Dù ngày hôm nay thế nào, anh vẫn luôn biết ơn vì có em bên cạnh. {context} 🙏",
-                    "Anh yêu em nhiều hơn những gì anh có thể nói. {context} 💖",
-                    "Nhìn lại chặng đường đã qua, anh thực sự hạnh phúc vì đã chọn em. {context} 🌟"
-                ],
-                "Nữ": [
-                    "Cảm ơn anh đã luôn là điểm tựa vững chắc. {context} 🤗",
-                    "Em không thể tưởng tượng cuộc sống sẽ thế nào nếu không có anh. {context} 💕",
-                    "Dù có chuyện gì xảy ra, em vẫn luôn tin tưởng và yêu anh. {context} 💝"
-                ]
-            },
-            "Vợ/chồng": {
-                "Nam": [
-                    "Cảm ơn em vì đã cùng anh xây dựng tổ ấm này. {context} 🏡",
-                    "Dù bận rộn thế nào, anh luôn nhớ đến em. {context} 💑",
-                    "Gia đình mình thật hạnh phúc vì có nhau. {context} 👨‍👩‍👧‍👦"
-                ],
-                "Nữ": [
-                    "Cảm ơn anh vì đã cùng em xây dựng tổ ấm này. {context} 🏡",
-                    "Dù bận rộn thế nào, em luôn nhớ đến anh. {context} 💑",
-                    "Gia đình mình thật hạnh phúc vì có nhau. {context} 👨‍👩‍👧‍👦"
-                ]
-            },
-            "Nhắn tin làm hoà": {
-                "Nam": [
-                    "Anh xin lỗi vì đã làm em buồn. Anh thực sự trân trọng em và muốn mọi thứ tốt đẹp trở lại. {context} 🕊️",
-                    "Anh nhận ra mình đã sai. Em cho anh cơ hội được nói chuyện và sửa sai nhé. {context} 🤝",
-                    "Tình cảm của chúng ta quan trọng hơn bất kỳ mâu thuẫn nào. Mình cùng vượt qua nhé em. {context} 💞"
-                ],
-                "Nữ": [
-                    "Em xin lỗi anh. Em không muốn vì hiểu lầm mà làm tổn thương tình cảm của mình. {context} 🕊️",
-                    "Em nhớ anh nhiều lắm. Mình làm lành nhé? {context} 🤗",
-                    "Dù có bất đồng, em vẫn yêu anh. Mình cùng tìm cách giải quyết tốt nhất nhé. {context} 💞"
-                ]
-            }
-        }
-    
-    def generate(self, gender, situation, user_input):
-        import random
-        
-        # Get templates for the situation and gender
-        if situation in self.templates and gender in self.templates[situation]:
-            templates = self.templates[situation][gender]
-        else:
-            # Default templates
-            templates = ["Xin chào, {context} 💬"]
-        
-        # Select random template
-        template = random.choice(templates)
-        
-        # Process user input
-        context_text = user_input.strip()
-        
-        if context_text:
-            if len(context_text) < 50:
-                # Short input - insert directly
-                message = template.format(context=context_text)
-            else:
-                # Long input - use first part
-                summary = context_text[:80] + "..."
-                message = template.format(context=f"Về chuyện {summary}")
-        else:
-            # No input provided
-            if "{context}" in template:
-                message = template.format(context="")
-            else:
-                message = template
-        
-        return message
 
 # ==================== MAIN APP ====================
 def main():
@@ -386,218 +565,259 @@ def main():
         st.session_state.paid = False
     if 'usage_count' not in st.session_state:
         st.session_state.usage_count = 0
+    if 'result' not in st.session_state:
+        st.session_state.result = ""
     
-    # Hero Section
+    # === HERO SECTION ===
     st.markdown("""
-    <div class="hero-container">
+    <div class="hero-gradient">
         <h1 class="hero-title">💬 EMOTICONN AI</h1>
-        <h2 class="hero-subtitle">Giao Tiếp Cảm Xúc - Tinh Tế Trong Từng Lời Nói</h2>
-        <p style="font-size: 1.1rem; opacity: 0.8;">Dành cho người trưởng thành muốn giao tiếp chân thành, lịch sự và đúng cảm xúc</p>
+        <p class="hero-subtitle">
+            Trợ lý giao tiếp cảm xúc dành cho người trưởng thành.<br>
+            Biến những điều khó nói thành lời tinh tế, chân thành.
+        </p>
     </div>
     """, unsafe_allow_html=True)
     
-    # Quick Navigation
-    st.markdown("---")
-    
-    # Phone Verification Section
+    # === MAIN CONTENT ===
     if not st.session_state.verified:
-        st.markdown("""
-        <div class="custom-card">
-            <h3>🔐 Bắt Đầu Dùng Thử Miễn Phí</h3>
-            <p>Nhập số điện thoại để nhận <b>3 tin nhắn AI miễn phí</b></p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        phone_input = st.text_input(
-            "**Số điện thoại của bạn:**",
-            placeholder="0912345678",
-            key="phone_input",
-            help="Nhập số điện thoại Việt Nam (10-11 số)"
-        )
-        
-        col1, col2, col3 = st.columns([2, 1, 2])
-        with col2:
-            verify_btn = st.button("✅ Xác Nhận & Bắt Đầu", type="primary", use_container_width=True)
-        
-        if verify_btn:
+        show_verification_section()
+    else:
+        show_main_app()
+    
+    # === FOOTER ===
+    st.markdown("""
+    <div class="footer">
+        <p>© 2024 EMOTICONN AI - Dành cho những trái tim trưởng thành</p>
+        <p>Hỗ trợ: support@emoticonn.ai | Bảo mật & Chính sách</p>
+    </div>
+    """, unsafe_allow_html=True)
+
+def show_verification_section():
+    """Show phone verification section"""
+    st.markdown("""
+    <div class="premium-card">
+        <h3 class="text-center mb-2">🔐 Bắt Đầu Dùng Thử Miễn Phí</h3>
+        <p class="text-center mb-3">Nhập số điện thoại để nhận <b>3 tin nhắn AI cao cấp</b></p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Phone input
+    phone_input = st.text_input(
+        "**Số điện thoại của bạn**",
+        placeholder="0912345678",
+        help="Nhập số điện thoại Việt Nam để bắt đầu dùng thử"
+    )
+    
+    # Verify button
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        if st.button("✅ Bắt Đầu Dùng Thử", key="verify_btn", use_container_width=True):
             if phone_input:
-                valid_phone = validate_phone_number(phone_input)
+                valid_phone = validate_phone(phone_input)
                 if valid_phone:
                     st.session_state.phone = valid_phone
                     st.session_state.verified = True
                     
-                    # Check if user is paid
+                    # Check if paid user
                     paid_users = load_paid_users()
                     if valid_phone in paid_users:
                         st.session_state.paid = True
+                    else:
+                        st.session_state.usage_count = get_usage_count(valid_phone)
                     
-                    # Get current usage
-                    st.session_state.usage_count = get_user_usage(valid_phone)
-                    
-                    st.markdown("""
-                    <div class="success-box">
-                        <h4>✅ Xác thực thành công!</h4>
-                        <p>Số điện thoại: <b>{}</b></p>
-                        <p>Bạn có <b>{}/3</b> lượt dùng thử miễn phí</p>
-                    </div>
-                    """.format(valid_phone, FREE_TRIAL_LIMIT - st.session_state.usage_count), unsafe_allow_html=True)
-                    
-                    # Auto refresh
-                    time.sleep(1.5)
+                    st.success(f"✅ Xác thực thành công! Số điện thoại: {valid_phone}")
+                    time.sleep(1)
                     st.rerun()
                 else:
                     st.error("⚠️ Số điện thoại không hợp lệ. Vui lòng nhập số Việt Nam (ví dụ: 0912345678)")
             else:
                 st.warning("⚠️ Vui lòng nhập số điện thoại")
-        
-        # Features preview
-        st.markdown("""
-        <div class="custom-card">
-            <h4>✨ Tính năng nổi bật:</h4>
-            <ul>
-            <li>💌 <b>3 tin nhắn miễn phí</b> đầy đủ tính năng</li>
-            <li>🎯 <b>5 tình huống</b> giao tiếp thực tế</li>
-            <li>👥 <b>Cá nhân hóa</b> theo giới tính</li>
-            <li>💝 <b>Ngôn từ tinh tế</b>, lịch sự, chân thành</li>
-            <li>🔓 <b>Mở khóa vĩnh viễn</b> chỉ 199.000đ</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        return
     
-    # Main Application - User is verified
+    # Features showcase
     st.markdown("""
-    <div class="custom-card">
-        <h3>🎯 Tạo Tin Nhắn Tinh Tế</h3>
+    <div class="premium-card">
+        <h4 class="mb-2">✨ Tại sao chọn EMOTICONN AI?</h4>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+            <div>
+                <h5>🎯 Dành cho người trưởng thành</h5>
+                <p>Ngôn từ tinh tế, không sến, không trẻ trâu</p>
+            </div>
+            <div>
+                <h5>💝 Hiểu tâm lý sâu sắc</h5>
+                <p>1000+ tình huống thực tế của tuổi 30-50+</p>
+            </div>
+            <div>
+                <h5>🔓 Mô hình đơn giản</h5>
+                <p>Dùng thử 3 lần → Trả phí 1 lần → Dùng mãi mãi</p>
+            </div>
+            <div>
+                <h5>📱 Tối ưu mobile</h5>
+                <p>Thiết kế đẹp, dễ dùng trên điện thoại</p>
+            </div>
+        </div>
     </div>
     """, unsafe_allow_html=True)
-    
-    # Show usage status
+
+def show_main_app():
+    """Show main application"""
+    # Check if paid or trial
     if not st.session_state.paid:
         remaining = FREE_TRIAL_LIMIT - st.session_state.usage_count
         
         if remaining <= 0:
-            st.markdown("""
-            <div class="warning-box">
-                <h4>⚠️ Bạn đã dùng hết lượt miễn phí</h4>
-                <p>Nâng cấp ngay để tiếp tục sử dụng không giới hạn!</p>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # Show payment section
             show_payment_section()
-            
-            # Option to try with another phone
-            if st.button("📱 Thử với số điện thoại khác"):
-                st.session_state.phone = ""
-                st.session_state.verified = False
-                st.session_state.paid = False
-                st.rerun()
-            
             return
         
-        # Show progress bar
-        st.info(f"**Bạn còn {remaining}/{FREE_TRIAL_LIMIT} lượt dùng thử miễn phí**")
+        # Show trial counter
+        st.markdown(f"""
+        <div class="premium-card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h4>🎯 Bạn đang dùng thử miễn phí</h4>
+                    <p>Còn <b>{remaining}/{FREE_TRIAL_LIMIT}</b> lượt sử dụng</p>
+                </div>
+                <div style="width: 60%;">
+        """, unsafe_allow_html=True)
+        
         st.progress(st.session_state.usage_count / FREE_TRIAL_LIMIT)
+        st.markdown("</div></div></div>", unsafe_allow_html=True)
     
-    # User Input Section
+    # === INPUT SECTION ===
+    st.markdown("""
+    <div class="premium-card">
+        <h3 class="mb-2">✍️ Tạo Tin Nhắn Tinh Tế</h3>
+        <p class="mb-3">Chọn tình huống và để AI giúp bạn diễn đạt cảm xúc</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # User inputs
     col1, col2 = st.columns(2)
     
     with col1:
-        gender = st.radio(
-            "**Giới tính của bạn:**",
+        user_gender = st.radio(
+            "**Giới tính của bạn**",
             ["Nam", "Nữ"],
-            horizontal=True,
-            key="gender"
+            horizontal=True
         )
     
     with col2:
-        situation = st.selectbox(
-            "**Tình huống giao tiếp:**",
-            ["Mới quen", "Đang tìm hiểu", "Yêu lâu năm", "Vợ/chồng", "Nhắn tin làm hoà"],
-            key="situation"
+        target_gender = st.radio(
+            "**Người nhận tin nhắn**",
+            ["Nam", "Nữ"],
+            horizontal=True
         )
     
-    # Message input
-    user_input = st.text_area(
-        "**Nội dung bạn muốn nhắn (hoặc để trống để AI gợi ý):**",
-        placeholder="Ví dụ: Hôm nay mình có chuyện muốn chia sẻ...\nMình vừa xem bộ phim rất hay...\nNhớ đến bạn và muốn hỏi thăm...",
-        height=120,
-        key="user_input",
-        help="Càng chi tiết, AI càng tạo tin nhắn phù hợp"
+    # Situation selection
+    situations = [
+        "💌 Làm quen lần đầu",
+        "🤔 Đối phương lạnh nhạt",
+        "💬 Gợi chuyện tinh tế",
+        "💔 Đã ly hôn",
+        "👨‍👩‍👧 Có con riêng",
+        "😠 Ghen nhẹ đúng mực",
+        "💰 Áp lực tài chính",
+        "☀️ Nhắn buổi sáng",
+        "⚡ Khi giận nhau",
+        "🌱 Ngại yêu lại"
+    ]
+    
+    situation = st.selectbox(
+        "**Chọn tình huống**",
+        situations,
+        help="Chọn tình huống phù hợp nhất với hoàn cảnh của bạn"
+    )
+    
+    # Optional context
+    context = st.text_area(
+        "**Thông tin thêm (tuỳ chọn)**",
+        placeholder="Ví dụ: Chúng ta quen nhau qua ứng dụng hẹn hò, bạn ấy là giáo viên...\nHoặc: Tôi muốn nhắn sau khi cãi nhau về chuyện đi muộn...",
+        height=100,
+        help="Càng chi tiết, tin nhắn càng cá nhân hoá"
     )
     
     # Generate button
-    generate_btn = st.button(
-        f"✨ Tạo Tin Nhắn Tinh Tế",
-        type="primary",
-        use_container_width=True,
-        key="generate"
-    )
-    
-    # Result Section
-    if generate_btn:
+    if st.button("✨ AI Tạo Tin Nhắn", key="generate_btn", use_container_width=True):
         if not st.session_state.paid:
-            # Update usage count
+            # Update usage
             st.session_state.usage_count += 1
             update_usage(st.session_state.phone)
             remaining = FREE_TRIAL_LIMIT - st.session_state.usage_count
+            
+            if remaining < 0:
+                st.error("⚠️ Bạn đã hết lượt dùng thử")
+                st.rerun()
         
         # Generate message
-        generator = MessageGenerator()
+        ai = EmotionalAI()
+        with st.spinner("🔄 AI đang thấu hiểu cảm xúc và tạo tin nhắn tinh tế cho bạn..."):
+            time.sleep(1.2)
+            result = ai.generate(user_gender, target_gender, situation, context)
+            st.session_state.result = result
         
-        with st.spinner("🔄 AI đang sáng tạo tin nhắn tinh tế cho bạn..."):
-            time.sleep(0.8)  # Simulate processing
-            result = generator.generate(gender, situation, user_input)
-        
-        # Display result
-        st.markdown(f"""
+        # Auto-scroll to result
+        st.markdown("<div id='result'></div>", unsafe_allow_html=True)
+    
+    # === RESULT SECTION ===
+    if st.session_state.result:
+        st.markdown("""
         <div class="result-card">
             <h4>💌 Tin nhắn gợi ý:</h4>
-            <p style="font-size: 1.2rem; line-height: 1.8;">{result}</p>
         </div>
         """, unsafe_allow_html=True)
         
-        # Copy button
-        col1, col2 = st.columns([3, 1])
+        # Message display
+        st.markdown(f"""
+        <div class="message-content">
+            {st.session_state.result}
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Action buttons
+        col1, col2, col3 = st.columns([2, 1, 1])
+        
         with col1:
-            st.caption("📋 Click nút bên cạnh để copy tin nhắn")
+            st.code(st.session_state.result, language="text")
+        
         with col2:
             if st.button("📋 Copy", use_container_width=True):
-                st.success("✅ Đã copy tin nhắn vào clipboard!")
+                st.success("✅ Đã copy tin nhắn!")
         
-        # Usage reminder
+        with col3:
+            if st.button("🔄 Tạo mới", use_container_width=True):
+                st.session_state.result = ""
+                st.rerun()
+        
+        # Trial reminder
         if not st.session_state.paid:
-            st.markdown(f"""
-            <div class="custom-card">
-                <p>🎯 <b>Bạn còn {remaining}/{FREE_TRIAL_LIMIT} lượt dùng thử</b></p>
-                {f'<p style="color: #e74c3c;">⚠️ Chỉ còn <b>{remaining}</b> lượt miễn phí cuối cùng!</p>' if remaining <= 1 else ''}
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # Upgrade prompt
-            if remaining <= 2:
-                st.markdown("---")
-                col1, col2 = st.columns([3, 1])
-                with col1:
-                    st.markdown("💎 **Mở khóa vĩnh viễn để không giới hạn tin nhắn tinh tế**")
-                with col2:
-                    if st.button("💳 Nâng Cấp Ngay", use_container_width=True):
-                        show_payment_section()
+            remaining = FREE_TRIAL_LIMIT - st.session_state.usage_count
+            if remaining <= 1:
+                st.markdown("""
+                <div class="premium-card" style="border-left: 5px solid #FF6B9D;">
+                    <h4>💎 Chỉ còn 1 lượt dùng thử!</h4>
+                    <p>Nâng cấp ngay để không giới hạn tin nhắn tinh tế</p>
+                    <button onclick="window.scrollTo({top: document.body.scrollHeight, behavior: 'smooth'})" 
+                            style="background: linear-gradient(135deg, #6A11CB 0%, #2575FC 100%); 
+                                   color: white; border: none; padding: 10px 20px; 
+                                   border-radius: 25px; cursor: pointer; margin-top: 10px;">
+                        💳 Xem gói nâng cấp
+                    </button>
+                </div>
+                """, unsafe_allow_html=True)
 
 def show_payment_section():
+    """Show payment section when trial ends"""
     st.markdown("""
     <div class="payment-card">
-        <h2 style="color: white;">🔓 MỞ KHÓA VĨNH VIỄN</h2>
-        <p style="font-size: 1.2rem;">Chỉ thanh toán một lần - Dùng trọn đời</p>
-        <h1 style="color: #FFD700; font-size: 2.5rem;">199.000đ</h1>
-        <p style="font-size: 0.9rem; opacity: 0.9;">(Chưa đầy 1 bữa cafe mỗi tháng)</p>
+        <h2>🔓 Mở Khoá Vĩnh Viễn</h2>
+        <p>Chỉ thanh toán một lần - Dùng trọn đời</p>
+        <div class="price-tag">199.000đ</div>
+        <p><i>Chưa bằng 1 bữa cafe mỗi tháng</i></p>
     </div>
     """, unsafe_allow_html=True)
     
     st.markdown("""
-    <div class="custom-card">
+    <div class="premium-card">
         <h3>💳 Hướng Dẫn Thanh Toán</h3>
         
         **1. Chuyển khoản qua ngân hàng:**
@@ -607,72 +827,59 @@ def show_payment_section():
         Số tài khoản: 4430269669
         Chủ tài khoản: NGUYEN XUAN DAT
         Số tiền: 199.000 VND
-        Nội dung chuyển khoản: AI [SỐ ĐIỆN THOẠI CỦA BẠN]
+        Nội dung chuyển khoản: EMOTICONN [SỐ ĐIỆN THOẠI]
         ```
         
-        **📌 Ví dụ:** 
+        **📌 Ví dụ:**
         - Số điện thoại của bạn: **0912345678**
-        - Nội dung chuyển khoản: **AI 0912345678**
+        - Nội dung CK: **EMOTICONN 0912345678**
         
         **2. Xác nhận thanh toán:**
         
-        Sau khi chuyển khoản, nhập số điện thoại của bạn vào ô bên dưới để mở khóa ngay lập tức.
+        Sau khi chuyển khoản, nhập số điện thoại để mở khoá ngay.
     </div>
     """, unsafe_allow_html=True)
     
     # Verification
     st.markdown("### ✅ Xác Nhận Thanh Toán")
     
-    col1, col2 = st.columns([2, 1])
-    with col1:
-        verification_input = st.text_input(
-            "Nhập số điện thoại của bạn để xác nhận:",
-            placeholder="0912345678",
-            key="verify_payment"
-        )
+    verify_input = st.text_input(
+        "Nhập số điện thoại của bạn để xác nhận:",
+        placeholder="0912345678",
+        key="payment_verify"
+    )
     
+    col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        verify_btn = st.button("🔓 Mở Khóa Ngay", type="primary", use_container_width=True)
-    
-    if verify_btn:
-        if verification_input:
-            valid_phone = validate_phone_number(verification_input)
-            
-            if valid_phone and valid_phone == st.session_state.phone:
-                # Save as paid user
-                save_paid_user(valid_phone)
-                st.session_state.paid = True
+        if st.button("🔓 Mở Khoá Ngay", key="unlock_btn", use_container_width=True):
+            if verify_input:
+                valid_phone = validate_phone(verify_input)
                 
-                # Celebration
-                st.balloons()
-                st.markdown("""
-                <div class="success-box">
-                    <h3>🎉 Chúc mừng!</h3>
-                    <p><b>Bạn đã mở khóa EMOTICONN AI thành công!</b></p>
-                    <p>Từ giờ bạn có thể tạo tin nhắn không giới hạn.</p>
-                </div>
-                """, unsafe_allow_html=True)
-                
-                # Auto refresh after 3 seconds
-                time.sleep(3)
-                st.rerun()
+                if valid_phone and valid_phone == st.session_state.phone:
+                    # Save as paid user
+                    save_paid_user(valid_phone)
+                    st.session_state.paid = True
+                    
+                    # Success animation
+                    st.balloons()
+                    st.success("🎉 Chúc mừng! Bạn đã mở khoá thành công!")
+                    
+                    # Auto refresh
+                    time.sleep(2)
+                    st.rerun()
+                else:
+                    st.error("⚠️ Số điện thoại không khớp. Vui lòng kiểm tra lại.")
             else:
-                st.error("⚠️ Số điện thoại không khớp. Vui lòng nhập đúng số bạn đã dùng đăng ký.")
-        else:
-            st.warning("⚠️ Vui lòng nhập số điện thoại để xác nhận")
+                st.warning("⚠️ Vui lòng nhập số điện thoại")
     
-    # Support contact
-    st.markdown("""
-    <div class="custom-card">
-        <h4>🆘 Cần hỗ trợ?</h4>
-        <ul>
-        <li>📧 Email: <code>support@emoticonn.ai</code></li>
-        <li>📱 Zalo: <code>090-xxx-xxxx</code></li>
-        <li>⏰ Thời gian hỗ trợ: 8:00 - 22:00 hàng ngày</li>
-        </ul>
-        <p><i>Chúng tôi sẽ phản hồi trong vòng 30 phút</i></p>
-    </div>
-    """, unsafe_allow_html=True)
+    # Try another phone option
+    st.markdown("---")
+    if st.button("📱 Thử với số điện thoại khác"):
+        st.session_state.phone = ""
+        st.session_state.verified = False
+        st.session_state.paid = False
+        st.session_state.usage_count = 0
+        st.rerun()
 
 if __name__ == "__main__":
     main()
